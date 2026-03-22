@@ -6,7 +6,7 @@
 
 ## Team Info
 ### Group Members and Coordination Roles
-- Arda  
+- Arda Kanalıcı
 - Ayse Camli
 - Azra Arslan
 - Ece Ozdemir
