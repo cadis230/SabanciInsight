@@ -1,5 +1,11 @@
 # Sabanci Course and Teacher Review App
-## Group Members
+## Introduction
+//description of project
+
+
+
+## Team Info
+### Group Members and Coordination Roles
 - Arda  
 - Ayse Camli
 - Azra Arslan
