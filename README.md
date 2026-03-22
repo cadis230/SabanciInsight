@@ -1,1 +1,1 @@
-# CS310-term-project-2026-spring
+# Sabanci Course and Teacher Review App
