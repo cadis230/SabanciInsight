@@ -21,4 +21,5 @@ class SabanciInsightApp extends StatelessWidget {
       home: const SplashScreen(),
     );
   }
-}
+}//main.dart 
+//github deneme
