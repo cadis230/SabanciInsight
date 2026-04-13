@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'screens/splash_screen.dart';
 import 'screens/main_page.dart';
 import 'screens/last_feedbacks_screen.dart';
+import 'screens/verify_enrollment_screen.dart';
+import 'screens/verification_successful_screen.dart';
 
 void main() {
   runApp(const SabanciInsightApp());
@@ -24,6 +26,9 @@ class SabanciInsightApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/feedbacks': (context) => const LastFeedbacksScreen(),
+        '/verify-enrollment': (context) => const VerifyEnrollmentScreen(),
+        '/verification-successful': (context) =>
+            const VerificationSuccessfulScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
