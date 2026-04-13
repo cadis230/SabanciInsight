@@ -47,11 +47,13 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _handleSignIn() async {
     if (_formKey.currentState!.validate()) {
+      final email = _emailController.text;
       setState(() => _isLoading = true);
       // Buraya gerçek login işlemi gelecek
       await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainPage()));
+      Navigator.pushReplacementNamed(context, '/main', arguments: email);
     }
   }
 

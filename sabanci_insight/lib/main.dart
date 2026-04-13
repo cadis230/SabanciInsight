@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/splash_screen.dart';
+import 'screens/main_page.dart';
+import 'screens/last_feedbacks_screen.dart';
 
 void main() {
   runApp(const SabanciInsightApp());
@@ -18,8 +20,18 @@ class SabanciInsightApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Roboto',
       ),
-      home: const SplashScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/feedbacks': (context) => const LastFeedbacksScreen(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/main') {
+          final email = settings.arguments as String? ?? '';
+          return MaterialPageRoute(builder: (_) => MainPage(email: email));
+        }
+        return null;
+      },
     );
   }
-}//main.dart 
-//github deneme
+}
