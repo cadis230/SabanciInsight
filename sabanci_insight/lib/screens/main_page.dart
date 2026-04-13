@@ -9,13 +9,12 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String name = 'there';
-    if (email.contains('@')) {
-      String local = email.split('@')[0];
-      if (local.contains('.')) {
-        String first = local.split('.')[0];
-        if (first.isNotEmpty) {
-          name = first[0].toUpperCase() + first.substring(1);
-        }
+    final String trimmedEmail = email.trim();
+    if (trimmedEmail.contains('@')) {
+      final String local = trimmedEmail.split('@')[0];
+      final String first = local.contains('.') ? local.split('.')[0] : local;
+      if (first.isNotEmpty) {
+        name = first[0].toUpperCase() + first.substring(1);
       }
     }
 
