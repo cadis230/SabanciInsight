@@ -69,7 +69,9 @@ class MainPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushNamed(context, '/verify-enrollment');
+                    },
                     child: Column(
                       children: const [
                         Icon(Icons.menu_book_outlined, size: 80),
