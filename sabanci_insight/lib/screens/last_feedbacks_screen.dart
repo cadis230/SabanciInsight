@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/feedback_item.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_text_styles.dart';
 
 class LastFeedbacksScreen extends StatefulWidget {
   const LastFeedbacksScreen({super.key});
@@ -10,38 +12,54 @@ class LastFeedbacksScreen extends StatefulWidget {
 
 class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
   List<FeedbackItem> feedbacks = [
-    FeedbackItem(id: '1', text: '', rating: 1),
-    FeedbackItem(id: '2', text: '', rating: 4),
-    FeedbackItem(id: '3', text: '', rating: 2),
-    FeedbackItem(id: '4', text: '', rating: 5),
+    FeedbackItem(id: '1', text: 'Great course, very well structured.', rating: 5),
+    FeedbackItem(id: '2', text: 'Assignments were challenging but fair.', rating: 4),
+    FeedbackItem(id: '3', text: 'Lectures could be more interactive.', rating: 2),
+    FeedbackItem(id: '4', text: 'Enjoyed the project-based approach.', rating: 4),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: const Text(
-                'Last Feedbacks',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/images/app_icon.png',
+                    width: 32,
+                    height: 32,
+                  ),
+                  const SizedBox(width: 10),
+                  const Text('Last Feedbacks', style: AppTextStyles.screenTitle),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Row(
+                children: const [
+                  Text('Edit your feedback', style: AppTextStyles.sectionSubtitle),
+                  SizedBox(width: 6),
+                  Icon(Icons.edit_outlined, size: 18, color: AppColors.iconMuted),
+                ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Row(
-                children: const [
-                  Text('Edit your feedback', style: TextStyle(fontSize: 15)),
-                  SizedBox(width: 6),
-                  Icon(Icons.edit_outlined, size: 18, color: Colors.black54),
-                ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Sabanci_University_logo.svg/320px-Sabanci_University_logo.svg.png',
+                  height: 36,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
             Expanded(
@@ -55,18 +73,18 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: Colors.black12),
+                      side: const BorderSide(color: AppColors.border),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       child: Row(
                         children: [
-                          const Icon(Icons.person, size: 36, color: Colors.black54),
+                          const Icon(Icons.person, size: 36, color: AppColors.iconMuted),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               item.text,
-                              style: const TextStyle(fontSize: 14),
+                              style: AppTextStyles.cardBody,
                             ),
                           ),
                           Row(
@@ -74,7 +92,7 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
                             children: List.generate(5, (i) {
                               return Icon(
                                 i < item.rating ? Icons.star : Icons.star_border,
-                                color: const Color(0xFFFFCC00),
+                                color: AppColors.starYellow,
                                 size: 14,
                               );
                             }),
@@ -86,7 +104,7 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
                                 feedbacks.removeWhere((f) => f.id == item.id);
                               });
                             },
-                            child: const Icon(Icons.close, size: 18, color: Colors.black38),
+                            child: const Icon(Icons.close, size: 18, color: AppColors.iconMuted),
                           ),
                         ],
                       ),
@@ -100,13 +118,13 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.black12)),
+          border: Border(top: BorderSide(color: AppColors.border)),
         ),
         child: BottomNavigationBar(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.background,
           currentIndex: 0,
           selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.black54,
+          unselectedItemColor: AppColors.iconMuted,
           showSelectedLabels: false,
           showUnselectedLabels: false,
           items: const [

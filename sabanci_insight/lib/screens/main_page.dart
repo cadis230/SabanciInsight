@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_text_styles.dart';
 
 class MainPage extends StatelessWidget {
   final String email;
@@ -18,32 +20,50 @@ class MainPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
-        title: const Text(
-          'Main Page',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/app_icon.png',
+              width: 28,
+              height: 28,
+            ),
+            const SizedBox(width: 8),
+            const Text('SabancıInsight', style: AppTextStyles.navTitle),
+          ],
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: Colors.black12, height: 1),
+          child: Container(color: AppColors.border, height: 1),
         ),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
             child: Text(
               'Hi, $name!',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: AppTextStyles.greeting,
             ),
           ),
-          Container(color: Colors.black12, height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: Image.network(
+              'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Sabanci_University_logo.svg/320px-Sabanci_University_logo.svg.png',
+              height: 40,
+              alignment: Alignment.centerLeft,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+          Container(color: AppColors.border, height: 1),
           Expanded(
             child: Center(
               child: Column(
@@ -55,10 +75,7 @@ class MainPage extends StatelessWidget {
                       children: const [
                         Icon(Icons.menu_book_outlined, size: 80),
                         SizedBox(height: 12),
-                        Text(
-                          'Courses',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+                        Text('Courses', style: AppTextStyles.featureLabel),
                       ],
                     ),
                   ),
@@ -71,10 +88,7 @@ class MainPage extends StatelessWidget {
                       children: const [
                         Icon(Icons.people_outline, size: 80),
                         SizedBox(height: 12),
-                        Text(
-                          'My feedbacks',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+                        Text('My feedbacks', style: AppTextStyles.featureLabel),
                       ],
                     ),
                   ),
@@ -86,13 +100,13 @@ class MainPage extends StatelessWidget {
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.black12)),
+          border: Border(top: BorderSide(color: AppColors.border)),
         ),
         child: BottomNavigationBar(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.background,
           currentIndex: 0,
           selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.black54,
+          unselectedItemColor: AppColors.iconMuted,
           showSelectedLabels: false,
           showUnselectedLabels: false,
           items: const [
