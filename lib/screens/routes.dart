@@ -14,7 +14,7 @@ import 'verify_enrollment_screen.dart';
 import 'verification_successful_screen.dart';
 
 class AppRoutes {
-  static const splash = '/';
+  static const splash = '/splash';
   static const login = '/login';
   static const register = '/register';
   static const main = '/main';

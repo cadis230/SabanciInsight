@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'routes.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -56,15 +56,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               _primaryButton(
                 text: 'Send Code',
                 enabled: isValidEmail,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => VerificationCodeScreen(
-                        email: emailController.text.trim(),
+                onTap: () async {
+                  try {
+                    await FirebaseAuth.instance.sendPasswordResetEmail(
+                      email: emailController.text.trim(),
+                    );
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Password reset email sent!"),
                       ),
-                    ),
-                  );
+                    );
+
+                    Navigator.pop(context); // login'a geri dön
+                  } on FirebaseAuthException catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.message ?? "Error"),
+                      ),
+                    );
+                  }
                 },
               ),
               const SizedBox(height: 30),

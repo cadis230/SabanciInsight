@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'routes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final _auth = FirebaseAuth.instance;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +22,14 @@ class _LoginScreenState extends State<LoginScreen>
   late AnimationController _animController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
+
+
+  Future<void> signIn(String email, String password) async {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+  }
 
   @override
   void initState() {
@@ -48,16 +59,41 @@ class _LoginScreenState extends State<LoginScreen>
   void _handleSignIn() async {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text;
+      final password = _passwordController.text;
+
       setState(() => _isLoading = true);
-      // Buraya gerçek login işlemi gelecek
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
+
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      } on FirebaseAuthException catch (e) {
+        String message;
+
+        switch (e.code) {
+          case 'user-not-found':
+            message = "No user found with this email";
+            break;
+          case 'wrong-password':
+            message = "Incorrect password";
+            break;
+          case 'invalid-email':
+            message = "Invalid email format";
+            break;
+          case 'invalid-credential':
+            message = "Email or password is incorrect";
+            break;
+          default:
+            message = "Login failed (${e.code})";
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+
       setState(() => _isLoading = false);
-      Navigator.pushReplacementNamed(
-        context,
-        AppRoutes.main,
-        arguments: email,
-      );
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'routes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -50,11 +51,41 @@ class _RegisterScreenState extends State<RegisterScreen>
   void _handleSignUp() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      // Buraya gerçek kayıt işlemi gelecek
-      await Future.delayed(const Duration(seconds: 1));
+
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      try {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("✅ Account created")),
+        );
+
+        Navigator.of(context).pop(); // 🔥 login’e dön
+
+      } on FirebaseAuthException catch (e) {
+        String message = "Register failed";
+
+        if (e.code == 'email-already-in-use') {
+          message = "Bu email zaten kayıtlı";
+        } else if (e.code == 'invalid-email') {
+          message = "Geçersiz email";
+        } else if (e.code == 'weak-password') {
+          message = "Şifre çok zayıf";
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+
       setState(() => _isLoading = false);
-      // Başarılı kayıt sonrası Login'e geri dön
-      if (mounted) Navigator.of(context).pop();
     }
   }
 
