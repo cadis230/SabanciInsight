@@ -45,13 +45,14 @@ class FeedbackProvider extends ChangeNotifier {
   }
 
   Future<void> add(String text, double rating) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
     final item = FeedbackItem(
       id: '',
       text: text,
       rating: rating,
       createdBy: uid,
-      createdAt: DateTime.now(),
+      createdAt: DateTime.now(), // placeholder; toMap() uses serverTimestamp
     );
     await _service.addFeedback(item);
   }
