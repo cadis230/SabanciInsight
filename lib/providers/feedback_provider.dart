@@ -45,12 +45,16 @@ class FeedbackProvider extends ChangeNotifier {
   }
 
   Future<void> add(String text, double rating) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw StateError('Cannot add feedback without an authenticated user.');
+    }
+
     final item = FeedbackItem(
       id: '',
       text: text,
       rating: rating,
-      createdBy: uid,
+      createdBy: user.uid,
       createdAt: DateTime.now(),
     );
     await _service.addFeedback(item);
