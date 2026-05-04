@@ -33,8 +33,11 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
 
   Future<void> _toggleSort() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() => _sortByRating = !_sortByRating);
-    await prefs.setBool(_kSortKey, _sortByRating);
+    if (!mounted) return;
+    final newSortByRating = !_sortByRating;
+    setState(() => _sortByRating = newSortByRating);
+    if (!mounted) return;
+    await prefs.setBool(_kSortKey, newSortByRating);
   }
 
   void _showFeedbackDialog(FeedbackItem? existing) {
