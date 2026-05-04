@@ -31,7 +31,7 @@ class FeedbackItem {
       'text': text,
       'rating': rating,
       'createdBy': createdBy,
-      'createdAt': Timestamp.fromDate(createdAt),
+      'createdAt': FieldValue.serverTimestamp(),
     };
   }
 }
