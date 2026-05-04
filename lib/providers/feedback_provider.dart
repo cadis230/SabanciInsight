@@ -7,15 +7,13 @@ import '../services/feedback_service.dart';
 class FeedbackProvider extends ChangeNotifier {
   final _service = FeedbackService();
   StreamSubscription<List<FeedbackItem>>? _sub;
+  StreamSubscription<User?>? _authSub;
 
   List<FeedbackItem> feedbacks = [];
   bool isLoading = true;
 
   FeedbackProvider() {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) _subscribe(uid);
-
-    FirebaseAuth.instance.authStateChanges().listen((user) {
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       _sub?.cancel();
       if (user != null) {
         _subscribe(user.uid);
@@ -66,6 +64,7 @@ class FeedbackProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _sub?.cancel();
     super.dispose();
   }
