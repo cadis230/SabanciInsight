@@ -27,6 +27,7 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
 
   Future<void> _loadSortPref() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() => _sortByRating = prefs.getBool(_kSortKey) ?? false);
   }
 
