@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
 import 'routes.dart';
 
 class MainPage extends StatelessWidget {
-  final String email;
-  const MainPage({super.key, this.email = ''});
+  const MainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final email = FirebaseAuth.instance.currentUser?.email ?? '';
     String name = 'there';
-    final String trimmedEmail = email.trim();
-    if (trimmedEmail.contains('@')) {
-      final String local = trimmedEmail.split('@')[0];
-      final String first = local.contains('.') ? local.split('.')[0] : local;
-      if (first.isNotEmpty) {
-        name = first[0].toUpperCase() + first.substring(1);
-      }
+    final trimmed = email.trim();
+    if (trimmed.contains('@')) {
+      final local = trimmed.split('@')[0];
+      final first = local.contains('.') ? local.split('.')[0] : local;
+      if (first.isNotEmpty) name = first[0].toUpperCase() + first.substring(1);
     }
 
     return Scaffold(
@@ -29,11 +28,7 @@ class MainPage extends StatelessWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/images/app_icon.png',
-              width: 28,
-              height: 28,
-            ),
+            Image.asset('assets/images/app_icon.png', width: 28, height: 28),
             const SizedBox(width: 8),
             const Text('SabancıInsight', style: AppTextStyles.navTitle),
           ],
@@ -48,10 +43,7 @@ class MainPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
-            child: Text(
-              'Hi, $name!',
-              style: AppTextStyles.greeting,
-            ),
+            child: Text('Hi, $name!', style: AppTextStyles.greeting),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
@@ -70,12 +62,7 @@ class MainPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.courseReview,
-                      );
-                    },
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.courseReview),
                     child: Column(
                       children: const [
                         Icon(Icons.menu_book_outlined, size: 80),
@@ -86,12 +73,7 @@ class MainPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 48),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.feedbacks,
-                      );
-                    },
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.feedbacks),
                     child: Column(
                       children: const [
                         Icon(Icons.people_outline, size: 80),
@@ -122,12 +104,7 @@ class MainPage extends StatelessWidget {
             BottomNavigationBarItem(icon: Icon(Icons.person, size: 30), label: ''),
           ],
           onTap: (index) {
-            if (index == 1) {
-              Navigator.pushNamed(
-                context,
-                AppRoutes.profile,
-              );
-            }
+            if (index == 1) Navigator.pushNamed(context, AppRoutes.profile);
           },
         ),
       ),
