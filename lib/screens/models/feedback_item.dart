@@ -5,14 +5,14 @@ class FeedbackItem {
   final String text;
   final double rating;
   final String createdBy;
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   FeedbackItem({
     required this.id,
     required this.text,
     required this.rating,
     required this.createdBy,
-    required this.createdAt,
+    this.createdAt,
   });
 
   factory FeedbackItem.fromFirestore(DocumentSnapshot doc) {
@@ -22,7 +22,7 @@ class FeedbackItem {
       text: data['text'] ?? '',
       rating: (data['rating'] ?? 0).toDouble(),
       createdBy: data['createdBy'] ?? '',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
     );
   }
 

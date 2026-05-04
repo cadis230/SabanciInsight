@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/feedback_provider.dart';
 import 'models/feedback_item.dart';
+import 'routes.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
-import 'profile_screen.dart';
 
 const _kSortKey = 'feedbacks_sort_by_rating';
 
@@ -104,7 +104,7 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
           ],
         );
       }),
-    );
+    ).then((_) => textController.dispose());
   }
 
   @override
@@ -253,12 +253,9 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
           ],
           onTap: (index) {
             if (index == 0) {
-              Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
+              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.main, (_) => false);
             } else if (index == 1) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
+              Navigator.pushNamed(context, AppRoutes.profile);
             }
           },
         ),

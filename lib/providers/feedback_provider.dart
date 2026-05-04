@@ -53,7 +53,6 @@ class FeedbackProvider extends ChangeNotifier {
       text: text,
       rating: rating,
       createdBy: user.uid,
-      createdAt: DateTime.now(),
     );
     await _service.addFeedback(item);
   }
