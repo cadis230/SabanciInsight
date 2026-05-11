@@ -159,7 +159,6 @@ class _SpecificCourseScreenState extends State<SpecificCourseScreen> {
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               child: Column(
                 children: [
-                  // ── Avg rating + Syllabus row ──
                   Row(
                     children: [
                       Expanded(
@@ -234,7 +233,6 @@ class _SpecificCourseScreenState extends State<SpecificCourseScreen> {
                   ),
                   const SizedBox(height: 14),
 
-                  // ── AI Insights Card ──
                   Card(
                     color: isDark
                         ? const Color(0xFF1E1E1E)
@@ -297,7 +295,6 @@ class _SpecificCourseScreenState extends State<SpecificCourseScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // ── Reviews list ──
                   Expanded(
                     child: snapshot.connectionState == ConnectionState.waiting
                         ? const Center(child: CircularProgressIndicator())
@@ -320,7 +317,6 @@ class _SpecificCourseScreenState extends State<SpecificCourseScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // ── Add Review button ──
                   SizedBox(
                     width: double.infinity,
                     height: 62,
