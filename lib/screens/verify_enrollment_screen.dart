@@ -50,10 +50,7 @@ class _VerifyEnrollmentScreenState extends State<VerifyEnrollmentScreen> {
     if (bytes == null || bytes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'PDF içeriği okunamadı. Web veya bu cihazda tekrar deneyin '
-            '(withData gerekir).',
-          ),
+          content: Text('PDF içeriği okunamadı. Lütfen tekrar deneyin.'),
         ),
       );
       return;
@@ -83,9 +80,10 @@ class _VerifyEnrollmentScreenState extends State<VerifyEnrollmentScreen> {
       });
     } catch (e) {
       if (!mounted) return;
+      debugPrint('Transcript parse error: $e');
       setState(() {
         _codesFromPdf = [];
-        _parseError = 'PDF metin okunamadı (taranmış PDF olabilir): $e';
+        _parseError = "PDF metni okunamadı. Farklı bir transcript PDF'i deneyin.";
       });
     } finally {
       if (mounted) setState(() => _parsing = false);
@@ -168,18 +166,20 @@ class _VerifyEnrollmentScreenState extends State<VerifyEnrollmentScreen> {
       );
     } on FirebaseException catch (e) {
       if (!mounted) return;
+      debugPrint('Enrollment verification save error (${e.code}): ${e.message}');
       final message = e.code == 'permission-denied'
-          ? 'Firestore izni yok. Firebase Console → Firestore → Rules: '
-              'Bu repodaki firestore.rules dosyasının tamamını yapıştırıp '
-              'Publish edin. (Veya: firebase deploy --only firestore:rules)'
-          : 'Kayıt hatası (${e.code}): ${e.message ?? ""}';
+          ? 'Doğrulama kaydı oluşturulamadı. Lütfen daha sonra tekrar deneyin.'
+          : 'Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
     } catch (e) {
       if (!mounted) return;
+      debugPrint('Enrollment verification save error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save verification: $e')),
+        const SnackBar(
+          content: Text('Doğrulama kaydedilemedi. Lütfen tekrar deneyin.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -209,7 +209,7 @@ class _VerifyEnrollmentScreenState extends State<VerifyEnrollmentScreen> {
                   const _ProgressStepsCard(),
                   const SizedBox(height: 16),
                   Text(
-                    'Resmi transkript PDF’inizi yükleyin. Metin seçilebilir '
+                    "Resmi transkript PDF'inizi yükleyin. Metin seçilebilir "
                     '(Banner) PDF’lerde ders kodları otomatik taranır. '
                     '${widget.courseCode} çıkan listede yoksa doğrulama tamamlanmaz.',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -355,7 +355,7 @@ class _CourseCodesPanel extends StatelessWidget {
           const SizedBox(height: 10),
           if (codesFromPdf.isEmpty)
             Text(
-              'Henüz kod yok. Metin seçilebilir bir transkript PDF’i yükleyin.',
+              "Henüz kod yok. Metin seçilebilir bir transkript PDF'i yükleyin.",
               style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
             )
           else

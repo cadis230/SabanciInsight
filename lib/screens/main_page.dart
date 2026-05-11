@@ -10,18 +10,23 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final email = FirebaseAuth.instance.currentUser?.email ?? '';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     String name = 'there';
     final trimmed = email.trim();
+
     if (trimmed.contains('@')) {
       final local = trimmed.split('@')[0];
       final first = local.contains('.') ? local.split('.')[0] : local;
-      if (first.isNotEmpty) name = first[0].toUpperCase() + first.substring(1);
+      if (first.isNotEmpty) {
+        name = first[0].toUpperCase() + first.substring(1);
+      }
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -30,12 +35,20 @@ class MainPage extends StatelessWidget {
           children: [
             Image.asset('assets/images/app_icon.png', width: 28, height: 28),
             const SizedBox(width: 8),
-            const Text('SabancıInsight', style: AppTextStyles.navTitle),
+            Text(
+              'SabancıInsight',
+              style: AppTextStyles.navTitle.copyWith(
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
           ],
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(
+            color: isDark ? const Color(0xFF333333) : AppColors.border,
+            height: 1,
+          ),
         ),
       ),
       body: Column(
@@ -43,7 +56,12 @@ class MainPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
-            child: Text('Hi, $name!', style: AppTextStyles.greeting),
+            child: Text(
+              'Hi, $name!',
+              style: AppTextStyles.greeting.copyWith(
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
@@ -55,30 +73,57 @@ class MainPage extends StatelessWidget {
               errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
           ),
-          Container(color: AppColors.border, height: 1),
+          Container(
+            color: isDark ? const Color(0xFF333333) : AppColors.border,
+            height: 1,
+          ),
           Expanded(
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.courseReview),
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.courseReview,
+                    ),
                     child: Column(
-                      children: const [
-                        Icon(Icons.menu_book_outlined, size: 80),
-                        SizedBox(height: 12),
-                        Text('Courses', style: AppTextStyles.featureLabel),
+                      children: [
+                        Icon(
+                          Icons.menu_book_outlined,
+                          size: 80,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Courses',
+                          style: AppTextStyles.featureLabel.copyWith(
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 48),
                   GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.feedbacks),
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.feedbacks,
+                    ),
                     child: Column(
-                      children: const [
-                        Icon(Icons.people_outline, size: 80),
-                        SizedBox(height: 12),
-                        Text('My feedbacks', style: AppTextStyles.featureLabel),
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 80,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'My feedbacks',
+                          style: AppTextStyles.featureLabel.copyWith(
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -89,22 +134,36 @@ class MainPage extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.border)),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : AppColors.background,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? const Color(0xFF333333) : AppColors.border,
+            ),
+          ),
         ),
         child: BottomNavigationBar(
-          backgroundColor: AppColors.background,
+          backgroundColor:
+              isDark ? const Color(0xFF1E1E1E) : AppColors.background,
           currentIndex: 0,
-          selectedItemColor: Colors.black,
-          unselectedItemColor: AppColors.iconMuted,
+          selectedItemColor: isDark ? Colors.white : Colors.black,
+          unselectedItemColor: isDark ? Colors.grey : AppColors.iconMuted,
           showSelectedLabels: false,
           showUnselectedLabels: false,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home, size: 30), label: ''),
-            BottomNavigationBarItem(icon: Icon(Icons.person, size: 30), label: ''),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home, size: 30),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person, size: 30),
+              label: '',
+            ),
           ],
           onTap: (index) {
-            if (index == 1) Navigator.pushNamed(context, AppRoutes.profile);
+            if (index == 1) {
+              Navigator.pushNamed(context, AppRoutes.profile);
+            }
           },
         ),
       ),

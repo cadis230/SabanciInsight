@@ -8,15 +8,19 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'My Profile',
-          style: AppTextStyles.pageTitle,
+          style: AppTextStyles.pageTitle.copyWith(
+            color: isDark ? Colors.white : AppColors.textDark,
+          ),
         ),
       ),
       body: SafeArea(
@@ -28,20 +32,24 @@ class ProfileScreen extends StatelessWidget {
               Container(
                 width: 130,
                 height: 130,
-                decoration: const BoxDecoration(
-                  color: AppColors.cardBackground,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF1E1E1E)
+                      : AppColors.cardBackground,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person,
                   size: 70,
-                  color: AppColors.primary,
+                  color: isDark ? Colors.white : AppColors.primary,
                 ),
               ),
               const SizedBox(height: 22),
-              const Text(
+              Text(
                 'Jane Doe',
-                style: AppTextStyles.pageTitle,
+                style: AppTextStyles.pageTitle.copyWith(
+                  color: isDark ? Colors.white : AppColors.textDark,
+                ),
               ),
               const SizedBox(height: 36),
               SizedBox(
@@ -56,18 +64,23 @@ class ProfileScreen extends StatelessWidget {
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.cardBackground,
-                    side: const BorderSide(
-                      color: AppColors.textLight,
+                    backgroundColor: isDark
+                        ? const Color(0xFF1E1E1E)
+                        : AppColors.cardBackground,
+                    side: BorderSide(
+                      color:
+                          isDark ? const Color(0xFF333333) : AppColors.textLight,
                       width: 1.4,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'View my transcript',
-                    style: AppTextStyles.cardTitle,
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: isDark ? Colors.white : AppColors.textDark,
+                    ),
                   ),
                 ),
               ),
@@ -83,49 +96,57 @@ class ProfileScreen extends StatelessWidget {
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.cardBackground,
-                    side: const BorderSide(
-                      color: AppColors.textLight,
+                    backgroundColor: isDark
+                        ? const Color(0xFF1E1E1E)
+                        : AppColors.cardBackground,
+                    side: BorderSide(
+                      color:
+                          isDark ? const Color(0xFF333333) : AppColors.textLight,
                       width: 1.4,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Settings',
-                    style: AppTextStyles.cardTitle,
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: isDark ? Colors.white : AppColors.textDark,
+                    ),
                   ),
                 ),
               ),
               const Spacer(),
-              BottomNavigationBar(
-                backgroundColor: AppColors.cardBackground,
-                selectedItemColor: AppColors.textDark,
-                unselectedItemColor: AppColors.textLight,
-                currentIndex: 1,
-                onTap: (index) {
-                  if (index == 0) {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.main,
-                    );
-                  }
-                },
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home),
-                    label: '',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person),
-                    label: '',
-                  ),
-                ],
-              ),
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor:
+            isDark ? const Color(0xFF1E1E1E) : AppColors.cardBackground,
+        selectedItemColor: isDark ? Colors.white : AppColors.textDark,
+        unselectedItemColor: isDark ? Colors.grey : AppColors.textLight,
+        currentIndex: 1,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.pushReplacementNamed(
+              context,
+              AppRoutes.main,
+            );
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '',
+          ),
+        ],
       ),
     );
   }

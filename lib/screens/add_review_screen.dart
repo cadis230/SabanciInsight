@@ -16,43 +16,53 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 📘 COURSE
-                const Text(
+                Text(
                   "CS310",
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
-                const Text("Add Review"),
-
+                Text(
+                  "Add Review",
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
                 const SizedBox(height: 20),
-
-                // 📝 COMMENT INPUT
                 TextFormField(
                   controller: _commentController,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                   decoration: InputDecoration(
                     hintText: "Write your review here.",
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[200],
+                    fillColor:
+                        isDark ? const Color(0xFF1E1E1E) : Colors.grey[200],
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
+                    ),
+                    errorStyle: const TextStyle(
+                      color: Colors.redAccent,
                     ),
                   ),
                   validator: (value) {
@@ -65,23 +75,18 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 30),
-
-                // ⭐ RATING TITLE
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "Rating",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
-                // ⭐ CLICKABLE STARS
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (index) {
@@ -94,14 +99,12 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                       icon: Icon(
                         index < rating ? Icons.star : Icons.star_border,
                         size: 30,
+                        color: Colors.amber,
                       ),
                     );
                   }),
                 ),
-
                 const SizedBox(height: 40),
-
-                // 🔘 SUBMIT
                 GestureDetector(
                   onTap: () {
                     if (_formKey.currentState!.validate()) {
@@ -117,26 +120,44 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text("Success"),
-                          content: const Text("Review submitted!"),
+                          backgroundColor:
+                              isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                          title: Text(
+                            "Success",
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          content: Text(
+                            "Review submitted!",
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () {
-                                Navigator.pop(context); // dialog kapanır
+                                Navigator.pop(context);
 
                                 Navigator.pushNamedAndRemoveUntil(
                                   this.context,
                                   AppRoutes.specificCourse,
-                                      (route) => false,
+                                  (route) => false,
                                 );
 
-                                Future.delayed(const Duration(milliseconds: 300), () {
-                                  ScaffoldMessenger.of(this.context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Review submitted successfully"),
-                                    ),
-                                  );
-                                });
+                                Future.delayed(
+                                  const Duration(milliseconds: 300),
+                                  () {
+                                    ScaffoldMessenger.of(this.context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Review submitted successfully",
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
                               },
                               child: const Text("OK"),
                             )
@@ -149,11 +170,21 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      border: Border.all(),
+                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      border: Border.all(
+                        color:
+                            isDark ? const Color(0xFF333333) : Colors.black,
+                      ),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Center(
-                      child: Text("SubmitReview"),
+                    child: Center(
+                      child: Text(
+                        "Submit Review",
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -162,12 +193,11 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
           ),
         ),
       ),
-
-      // 🔻 BOTTOM NAV
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         currentIndex: 0,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: isDark ? Colors.white : Colors.black,
+        unselectedItemColor: isDark ? Colors.grey : Colors.grey,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: const [
@@ -185,13 +215,13 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
             Navigator.pushNamedAndRemoveUntil(
               context,
               AppRoutes.main,
-                  (route) => false,
+              (route) => false,
             );
           } else if (index == 1) {
             Navigator.pushNamedAndRemoveUntil(
               context,
               AppRoutes.profile,
-                  (route) => false,
+              (route) => false,
             );
           }
         },

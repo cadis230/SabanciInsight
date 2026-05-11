@@ -8,9 +8,9 @@ class SpecificCourseScreen extends StatelessWidget {
   const SpecificCourseScreen({super.key});
 
   Widget buildStarRow() {
-    return Row(
+    return const Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
+      children: [
         Icon(Icons.star, color: Colors.amber, size: 22),
         Icon(Icons.star, color: Colors.amber, size: 22),
         Icon(Icons.star, color: Colors.amber, size: 22),
@@ -23,15 +23,16 @@ class SpecificCourseScreen extends StatelessWidget {
   Widget buildReviewCard({
     required String comment,
     required String rating,
+    required bool isDark,
   }) {
     return Card(
-      color: AppColors.cardBackground,
+      color: isDark ? const Color(0xFF1E1E1E) : AppColors.cardBackground,
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 14),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: const BorderSide(
-          color: AppColors.textLight,
+        side: BorderSide(
+          color: isDark ? const Color(0xFF333333) : AppColors.textLight,
           width: 1.2,
         ),
       ),
@@ -41,20 +42,22 @@ class SpecificCourseScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.person,
-                  color: AppColors.textDark,
+                  color: isDark ? Colors.white : AppColors.textDark,
                   size: 28,
                 ),
                 const Spacer(),
                 Text(
                   rating,
-                  style: AppTextStyles.sectionTitle,
+                  style: AppTextStyles.sectionTitle.copyWith(
+                    color: isDark ? Colors.white : AppColors.textDark,
+                  ),
                 ),
                 const SizedBox(width: 6),
                 const Icon(
                   Icons.star,
-                  color: Colors.grey,
+                  color: Colors.amber,
                   size: 28,
                 ),
               ],
@@ -64,7 +67,7 @@ class SpecificCourseScreen extends StatelessWidget {
               comment,
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyText.copyWith(
-                color: AppColors.textDark,
+                color: isDark ? Colors.white70 : AppColors.textDark,
               ),
             ),
           ],
@@ -75,22 +78,26 @@ class SpecificCourseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new,
-            color: AppColors.textDark,
+            color: isDark ? Colors.white : AppColors.textDark,
           ),
         ),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'CS 300  Algorithms',
-          style: AppTextStyles.pageTitle,
+          style: AppTextStyles.pageTitle.copyWith(
+            color: isDark ? Colors.white : AppColors.textDark,
+          ),
         ),
       ),
       body: SafeArea(
@@ -105,9 +112,13 @@ class SpecificCourseScreen extends StatelessWidget {
                     child: Container(
                       height: 86,
                       decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
+                        color: isDark
+                            ? const Color(0xFF1E1E1E)
+                            : AppColors.cardBackground,
                         border: Border.all(
-                          color: AppColors.textLight,
+                          color: isDark
+                              ? const Color(0xFF333333)
+                              : AppColors.textLight,
                           width: 1.4,
                         ),
                         borderRadius: BorderRadius.circular(20),
@@ -115,9 +126,11 @@ class SpecificCourseScreen extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
+                          Text(
                             'Avg 3.0',
-                            style: AppTextStyles.sectionTitle,
+                            style: AppTextStyles.sectionTitle.copyWith(
+                              color: isDark ? Colors.white : AppColors.textDark,
+                            ),
                           ),
                           const SizedBox(height: 6),
                           buildStarRow(),
@@ -133,19 +146,25 @@ class SpecificCourseScreen extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: () {},
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: AppColors.cardBackground,
-                          side: const BorderSide(
-                            color: AppColors.textLight,
+                          backgroundColor: isDark
+                              ? const Color(0xFF1E1E1E)
+                              : AppColors.cardBackground,
+                          side: BorderSide(
+                            color: isDark
+                                ? const Color(0xFF333333)
+                                : AppColors.textLight,
                             width: 1.4,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'View Syllabus',
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.cardTitle,
+                          style: AppTextStyles.cardTitle.copyWith(
+                            color: isDark ? Colors.white : AppColors.textDark,
+                          ),
                         ),
                       ),
                     ),
@@ -154,17 +173,17 @@ class SpecificCourseScreen extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Card(
-                color: const Color(0xFFDCEBFA),
+                color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFDCEBFA),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
-                  side: const BorderSide(
-                    color: AppColors.textLight,
+                  side: BorderSide(
+                    color: isDark ? const Color(0xFF333333) : AppColors.textLight,
                     width: 1.0,
                   ),
                 ),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                   child: Column(
                     children: [
                       Text(
@@ -172,14 +191,16 @@ class SpecificCourseScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
+                          color: isDark ? Colors.white : AppColors.textDark,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         'Students consistently mention high workload. Grading is strict.',
                         textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyText,
+                        style: AppTextStyles.bodyText.copyWith(
+                          color: isDark ? Colors.white70 : AppColors.textDark,
+                        ),
                       ),
                     ],
                   ),
@@ -191,13 +212,15 @@ class SpecificCourseScreen extends StatelessWidget {
                   children: [
                     buildReviewCard(
                       rating: '4.5',
+                      isDark: isDark,
                       comment:
-                      'I took this course from Saima hoca. The course is very informative and well-structured. However, the workload is quite heavy.',
+                          'I took this course from Saima hoca. The course is very informative and well-structured. However, the workload is quite heavy.',
                     ),
                     buildReviewCard(
                       rating: '4.5',
+                      isDark: isDark,
                       comment:
-                      'This course requires consistent effort throughout the semester. The grading of Kamer hoca is strict.',
+                          'This course requires consistent effort throughout the semester. The grading of Kamer hoca is strict.',
                     ),
                   ],
                 ),
@@ -211,29 +234,29 @@ class SpecificCourseScreen extends StatelessWidget {
                     Navigator.pushNamed(
                       context,
                       AppRoutes.verifyEnrollment,
-                      arguments: const VerifyEnrollmentRouteArgs(
-                        courseCode: 'CS300',
-                        courseName: 'Algorithms',
-                      ),
+                      arguments: VerifyEnrollmentRouteArgs.defaultArgs,
                     );
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.add_circle,
-                    color: AppColors.textDark,
+                    color: isDark ? Colors.white : AppColors.textDark,
                     size: 34,
                   ),
-                  label: const Text(
+                  label: Text(
                     'ADD REVIEW',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textDark,
+                      color: isDark ? Colors.white : AppColors.textDark,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.cardBackground,
-                    side: const BorderSide(
-                      color: AppColors.textLight,
+                    backgroundColor: isDark
+                        ? const Color(0xFF1E1E1E)
+                        : AppColors.cardBackground,
+                    side: BorderSide(
+                      color:
+                          isDark ? const Color(0xFF333333) : AppColors.textLight,
                       width: 1.4,
                     ),
                     shape: RoundedRectangleBorder(
@@ -248,10 +271,13 @@ class SpecificCourseScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor:
+            isDark ? const Color(0xFF1E1E1E) : AppColors.cardBackground,
         currentIndex: 0,
-        selectedItemColor: AppColors.textDark,
-        unselectedItemColor: AppColors.textLight,
+        selectedItemColor: isDark ? Colors.white : AppColors.textDark,
+        unselectedItemColor: isDark ? Colors.grey : AppColors.textLight,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
         onTap: (index) {
           if (index == 0) {
             Navigator.pushReplacementNamed(
