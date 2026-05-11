@@ -1,9 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/feedback_provider.dart';
-import '../services/enrollment_verification_service.dart';
-import '../services/transcript_course_extractor.dart';
+
 import 'routes.dart';
 
 class AddReviewScreen extends StatefulWidget {
@@ -21,8 +19,9 @@ class AddReviewScreen extends StatefulWidget {
 }
 
 class _AddReviewScreenState extends State<AddReviewScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _commentController = TextEditingController();
+
   int _rating = 0;
   bool _isLoading = false;
 
@@ -32,64 +31,86 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _submitReview() async {
     if (!_formKey.currentState!.validate()) return;
+
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a rating')),
+        const SnackBar(
+          content: Text('Please select a rating.'),
+        ),
       );
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
+
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please sign in to post a review.')),
+        const SnackBar(
+          content: Text('Please sign in to add a review.'),
+        ),
       );
       return;
     }
 
-    setState(() => _isLoading = true);
-    try {
-      final service = EnrollmentVerificationService();
-      final items = await service.listForUser(user.uid);
-      final merged = EnrollmentVerificationService.mergedCourseCodes(items);
-      if (!mounted) return;
-      if (!TranscriptCourseExtractor.listContainsCourse(
-        merged,
-        widget.courseId,
-      )) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'You cannot post a review: ${widget.courseId} is not on your '
-              'saved transcript. Upload a transcript that lists this course first.',
-            ),
-          ),
-        );
-        return;
-      }
+    setState(() {
+      _isLoading = true;
+    });
 
-      await context.read<FeedbackProvider>().add(
-            _commentController.text.trim(),
-            _rating.toDouble(),
-            courseId: widget.courseId,
-          );
+    try {
+      await FirebaseFirestore.instance.collection('feedbacks').add({
+        'courseId': widget.courseId,
+        'courseTitle': widget.courseTitle,
+        'rating': _rating,
+        'text': _commentController.text.trim(),
+        'createdBy': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review submitted successfully')),
+        const SnackBar(
+          content: Text('Review added successfully.'),
+        ),
       );
-      Navigator.of(context).popUntil(
-        (route) => route.settings.name == AppRoutes.specificCourse,
-      );
+
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit review: $e')),
+        SnackBar(
+          content: Text('Failed to add review: $e'),
+        ),
       );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  Widget _buildStarButton(int index) {
+    final selected = index <= _rating;
+
+    return IconButton(
+      onPressed: _isLoading
+          ? null
+          : () {
+        setState(() {
+          _rating = index;
+        });
+      },
+      icon: Icon(
+        selected ? Icons.star : Icons.star_border,
+        color: Colors.amber,
+        size: 34,
+      ),
+    );
   }
 
   @override
@@ -98,113 +119,137 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      appBar: AppBar(
+        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        elevation: 0,
+        title: const Text('Add Review'),
+      ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 20),
+                Text(
+                  widget.courseId,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
                 Text(
                   widget.courseTitle,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Your Review',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'Add Review',
-                  style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 20),
                 TextFormField(
                   controller: _commentController,
+                  enabled: !_isLoading,
+                  maxLines: 5,
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black,
                   ),
-                  maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: 'Write your review here.',
+                    hintText: 'Write your review here...',
                     hintStyle: TextStyle(
-                      color: isDark ? Colors.white54 : Colors.black54,
+                      color: isDark ? Colors.white54 : Colors.black45,
                     ),
                     filled: true,
                     fillColor:
-                        isDark ? const Color(0xFF1E1E1E) : Colors.grey[200],
+                    isDark ? const Color(0xFF1E1E1E) : Colors.grey[200],
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
                     ),
-                    errorStyle: const TextStyle(color: Colors.redAccent),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a comment';
+                      return 'Please write a review.';
                     }
-                    if (value.trim().length < 5) return 'Comment too short';
+
+                    if (value.trim().length < 3) {
+                      return 'Review is too short.';
+                    }
+
                     return null;
                   },
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 26),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Rating',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (index) {
-                    return IconButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () => setState(() => _rating = index + 1),
-                      icon: Icon(
-                        index < _rating ? Icons.star : Icons.star_border,
-                        size: 30,
-                        color: Colors.amber,
-                      ),
-                    );
-                  }),
+                  children: [
+                    _buildStarButton(1),
+                    _buildStarButton(2),
+                    _buildStarButton(3),
+                    _buildStarButton(4),
+                    _buildStarButton(5),
+                  ],
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 34),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 52,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _submit,
+                    onPressed: _isLoading ? null : _submitReview,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isDark ? const Color(0xFF1E1E1E) : Colors.black,
+                      isDark ? const Color(0xFF1E1E1E) : Colors.black,
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                     ),
                     child: _isLoading
                         ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
                         : const Text(
-                            'Submit Review',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
+                      'Submit Review',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -220,16 +265,27 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '',
+          ),
         ],
         onTap: (index) {
           if (index == 0) {
             Navigator.pushNamedAndRemoveUntil(
-                context, AppRoutes.main, (route) => false);
+              context,
+              AppRoutes.main,
+                  (route) => false,
+            );
           } else if (index == 1) {
-            Navigator.pushNamedAndRemoveUntil(
-                context, AppRoutes.profile, (route) => false);
+            Navigator.pushNamed(
+              context,
+              AppRoutes.profile,
+            );
           }
         },
       ),
