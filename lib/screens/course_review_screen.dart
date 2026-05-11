@@ -1,9 +1,146 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import 'enrollment_route_args.dart';
 import 'routes.dart';
 
-class CourseReviewScreen extends StatelessWidget {
+class CourseReviewScreen extends StatefulWidget {
   const CourseReviewScreen({super.key});
+
+  @override
+  State<CourseReviewScreen> createState() => _CourseReviewScreenState();
+}
+
+class _CourseReviewScreenState extends State<CourseReviewScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchText = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, String>> _extractCourses(QuerySnapshot snapshot) {
+    final Map<String, String> courses = {};
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      final courseCode = (data['courseId'] ?? doc.id).toString().trim();
+      final courseName = (data['courseTitle'] ?? courseCode).toString().trim();
+
+      if (courseCode.isNotEmpty) {
+        courses[courseCode] = courseName.isNotEmpty ? courseName : courseCode;
+      }
+
+      final extracted = data['extractedCourseCodes'];
+
+      if (extracted is List) {
+        for (final item in extracted) {
+          final code = item.toString().trim();
+          if (code.isNotEmpty && !courses.containsKey(code)) {
+            courses[code] = code;
+          }
+        }
+      }
+    }
+
+    final list = courses.entries
+        .map((e) => {
+      'id': e.key,
+      'title': e.value,
+    })
+        .toList();
+
+    list.sort((a, b) => a['id']!.compareTo(b['id']!));
+
+    if (_searchText.trim().isEmpty) {
+      return list;
+    }
+
+    final query = _searchText.toLowerCase();
+
+    return list.where((course) {
+      final id = course['id']!.toLowerCase();
+      final title = course['title']!.toLowerCase();
+
+      return id.contains(query) || title.contains(query);
+    }).toList();
+  }
+
+  void _openSpecificCourse(Map<String, String> course) {
+    Navigator.pushNamed(
+      context,
+      AppRoutes.specificCourse,
+      arguments: SpecificCourseRouteArgs(
+        courseId: course['id']!,
+        courseTitle: course['title']!,
+      ),
+    );
+  }
+
+  Widget _buildCourseItem(
+      BuildContext context,
+      bool isDark,
+      Map<String, String> course,
+      ) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => _openSpecificCourse(course),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[200],
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? const Color(0xFF333333) : Colors.grey.shade300,
+          ),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: isDark ? Colors.black : Colors.white,
+              child: Icon(
+                Icons.menu_book,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    course['id']!,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    course['title']!,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: isDark ? Colors.white54 : Colors.black54,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,89 +148,98 @@ class CourseReviewScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      appBar: AppBar(
+        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        elevation: 0,
+        title: const Text('Courses'),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                TextField(
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black,
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    _searchText = value;
+                  });
+                },
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Search course',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white54 : Colors.black54,
                   ),
-                  decoration: InputDecoration(
-                    hintText: "Search",
-                    hintStyle: TextStyle(
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: isDark ? Colors.white70 : Colors.black54,
-                    ),
-                    filled: true,
-                    fillColor:
-                        isDark ? const Color(0xFF1E1E1E) : Colors.grey[200],
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
-                    ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                  filled: true,
+                  fillColor:
+                  isDark ? const Color(0xFF1E1E1E) : Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
                   ),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  "Course",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                buildCourseItem(context, isDark, 'CS300', 'CS 300  Algorithms'),
-                buildCourseItem(context, isDark, 'CS301', 'CS 301  Data Structures'),
-                buildCourseItem(context, isDark, 'CS310', 'CS 310  Mobile App Dev'),
-                const SizedBox(height: 20),
-                Text(
-                  "Instructors",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                buildInstructorItem(isDark),
-                buildInstructorItem(isDark),
-                const SizedBox(height: 20),
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        "Featured Course",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black,
+              ),
+              const SizedBox(height: 18),
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('courses')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Something went wrong:\n${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          "https://picsum.photos/200",
-                          width: 200,
-                          height: 120,
-                          fit: BoxFit.cover,
+                      );
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+
+                    final courses = _extractCourses(snapshot.data!);
+
+                    if (courses.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No courses found.',
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      itemCount: courses.length,
+                      itemBuilder: (context, index) {
+                        return _buildCourseItem(
+                          context,
+                          isDark,
+                          courses[index],
+                        );
+                      },
+                    );
+                  },
                 ),
-                const SizedBox(height: 20),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -101,7 +247,7 @@ class CourseReviewScreen extends StatelessWidget {
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         currentIndex: 0,
         selectedItemColor: isDark ? Colors.white : Colors.black,
-        unselectedItemColor: isDark ? Colors.grey : Colors.grey,
+        unselectedItemColor: Colors.grey,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: const [
@@ -127,86 +273,6 @@ class CourseReviewScreen extends StatelessWidget {
             );
           }
         },
-      ),
-    );
-  }
-
-  Widget buildCourseItem(BuildContext context, bool isDark, String courseId, String courseTitle) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.specificCourse,
-          arguments: SpecificCourseRouteArgs(
-            courseId: courseId,
-            courseTitle: courseTitle,
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[300],
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isDark ? const Color(0xFF333333) : Colors.transparent,
-          ),
-        ),
-        child: Row(
-          children: [
-            Image.asset(
-              "assets/images/course.png",
-              width: 40,
-              height: 40,
-              color: isDark ? Colors.white : null,
-            ),
-            const SizedBox(width: 10),
-            Row(
-              children: [
-                Icon(Icons.star,
-                    size: 16, color: isDark ? Colors.amber : Colors.black),
-                Icon(Icons.star,
-                    size: 16, color: isDark ? Colors.amber : Colors.black),
-                Icon(Icons.star,
-                    size: 16, color: isDark ? Colors.amber : Colors.black),
-                Icon(Icons.star,
-                    size: 16, color: isDark ? Colors.amber : Colors.black),
-                Icon(Icons.star_border,
-                    size: 16, color: isDark ? Colors.amber : Colors.black),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildInstructorItem(bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[300],
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isDark ? const Color(0xFF333333) : Colors.transparent,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.person,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            "Username",
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-        ],
       ),
     );
   }
