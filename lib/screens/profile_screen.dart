@@ -57,10 +57,9 @@ class ProfileScreen extends StatelessWidget {
                 height: 56,
                 child: OutlinedButton(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Transcript page will be connected here.'),
-                      ),
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.transcript,
                     );
                   },
                   style: OutlinedButton.styleFrom(

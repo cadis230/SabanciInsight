@@ -10,4 +10,11 @@ class EnrollmentVerificationService {
     final doc = await _col.add(item.toCreateMap());
     return doc.id;
   }
+
+  Future<void> deleteAllForUser(String userId) async {
+    final snapshots = await _col.where('createdBy', isEqualTo: userId).get();
+    for (final doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
+  }
 }
