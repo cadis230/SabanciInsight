@@ -1,1 +1,26 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"sabanciinsight","appId":"1:613012102212:android:d58a91e45b8c3260377011","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"sabanciinsight","configurations":{"android":"1:613012102212:android:d58a91e45b8c3260377011","web":"1:613012102212:web:2c4782e08656e7ac377011","windows":"1:613012102212:web:7d7a125b814e34bd377011"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "sabanciinsight",
+          "appId": "1:613012102212:android:d58a91e45b8c3260377011",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "sabanciinsight",
+          "configurations": {
+            "android": "1:613012102212:android:d58a91e45b8c3260377011",
+            "web": "1:613012102212:web:2c4782e08656e7ac377011",
+            "windows": "1:613012102212:web:7d7a125b814e34bd377011"
+          }
+        }
+      }
+    }
+  }
+}

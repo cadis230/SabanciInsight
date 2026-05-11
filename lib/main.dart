@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/routes.dart';
 import 'screens/auth_wrapper.dart';
+import 'providers/auth_provider.dart';
 import 'providers/feedback_provider.dart';
 
 void main() async {
@@ -19,6 +20,7 @@ class SabanciInsightApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => FeedbackProvider()),
       ],
       child: MaterialApp(
