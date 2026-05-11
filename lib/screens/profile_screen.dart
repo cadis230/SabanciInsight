@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
 import 'routes.dart';
@@ -46,7 +47,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 22),
               Text(
-                'Jane Doe',
+                FirebaseAuth.instance.currentUser?.email?.split('@')[0] ?? 'Profile',
                 style: AppTextStyles.pageTitle.copyWith(
                   color: isDark ? Colors.white : AppColors.textDark,
                 ),

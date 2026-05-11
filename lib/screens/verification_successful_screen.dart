@@ -205,7 +205,16 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                     height: 52,
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.addReview);
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.addReview,
+                          arguments: AddReviewRouteArgs(
+                            courseId: a?.courseCode ?? '',
+                            courseTitle: a != null
+                                ? '${a.courseCode} — ${a.courseName}'
+                                : 'Review',
+                          ),
+                        );
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF2563EB),

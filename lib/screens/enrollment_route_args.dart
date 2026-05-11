@@ -1,3 +1,25 @@
+/// Arguments for [AppRoutes.addReview].
+class AddReviewRouteArgs {
+  final String courseId;
+  final String courseTitle;
+
+  const AddReviewRouteArgs({
+    required this.courseId,
+    required this.courseTitle,
+  });
+}
+
+/// Arguments for [AppRoutes.specificCourse].
+class SpecificCourseRouteArgs {
+  final String courseId;
+  final String courseTitle;
+
+  const SpecificCourseRouteArgs({
+    required this.courseId,
+    required this.courseTitle,
+  });
+}
+
 /// Arguments for [AppRoutes.verifyEnrollment].
 class VerifyEnrollmentRouteArgs {
   static const defaultCourseCode = 'CS300';

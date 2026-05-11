@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'enrollment_route_args.dart';
 import 'routes.dart';
 
 class CourseReviewScreen extends StatelessWidget {
@@ -51,9 +52,9 @@ class CourseReviewScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                buildCourseItem(context, isDark),
-                buildCourseItem(context, isDark),
-                buildCourseItem(context, isDark),
+                buildCourseItem(context, isDark, 'CS300', 'CS 300  Algorithms'),
+                buildCourseItem(context, isDark, 'CS301', 'CS 301  Data Structures'),
+                buildCourseItem(context, isDark, 'CS310', 'CS 310  Mobile App Dev'),
                 const SizedBox(height: 20),
                 Text(
                   "Instructors",
@@ -130,12 +131,16 @@ class CourseReviewScreen extends StatelessWidget {
     );
   }
 
-  Widget buildCourseItem(BuildContext context, bool isDark) {
+  Widget buildCourseItem(BuildContext context, bool isDark, String courseId, String courseTitle) {
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
           context,
           AppRoutes.specificCourse,
+          arguments: SpecificCourseRouteArgs(
+            courseId: courseId,
+            courseTitle: courseTitle,
+          ),
         );
       },
       child: Container(

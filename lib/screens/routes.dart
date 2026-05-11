@@ -39,8 +39,22 @@ class AppRoutes {
     profile: (_) => const ProfileScreen(),
     settings: (_) => const SettingsScreen(),
     courseReview: (_) => const CourseReviewScreen(),
-    specificCourse: (_) => const SpecificCourseScreen(),
-    addReview: (_) => const AddReviewScreen(),
+    specificCourse: (context) {
+      final raw = ModalRoute.of(context)?.settings.arguments;
+      final args = raw is SpecificCourseRouteArgs ? raw : null;
+      return SpecificCourseScreen(
+        courseId: args?.courseId ?? 'CS300',
+        courseTitle: args?.courseTitle ?? 'CS 300  Algorithms',
+      );
+    },
+    addReview: (context) {
+      final raw = ModalRoute.of(context)?.settings.arguments;
+      final args = raw is AddReviewRouteArgs ? raw : null;
+      return AddReviewScreen(
+        courseId: args?.courseId ?? '',
+        courseTitle: args?.courseTitle ?? 'Review',
+      );
+    },
     feedbacks: (_) => const LastFeedbacksScreen(),
     forgotPassword: (_) => const ForgotPasswordScreen(),
     verifyEnrollment: (context) {
