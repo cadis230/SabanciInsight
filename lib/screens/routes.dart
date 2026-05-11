@@ -13,6 +13,7 @@ import 'forgot_password_flow.dart';
 import 'enrollment_route_args.dart';
 import 'verify_enrollment_screen.dart';
 import 'verification_successful_screen.dart';
+import 'transcript_screen.dart';
 
 class AppRoutes {
   static const splash = '/splash';
@@ -28,6 +29,7 @@ class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const verifyEnrollment = '/verify-enrollment';
   static const verificationSuccess = '/verification-success';
+  static const transcript = '/transcript';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (_) => const SplashScreen(),
@@ -65,5 +67,6 @@ class AppRoutes {
           raw is VerificationSuccessRouteArgs ? raw : null;
       return VerificationSuccessfulScreen(args: args);
     },
+    transcript: (_) => const TranscriptScreen(),
   };
 }
