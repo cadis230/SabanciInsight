@@ -2,10 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AiService {
-  static const String _apiKey = 'BURAYA_API_KEY_YAZ';
+  static const String _apiKey = 'console.anthropic.com';
   static const String _url = 'https://api.anthropic.com/v1/messages';
 
-  /// Reviews listesini alır, Claude'dan özet üretir
   Future<String> generateCourseInsights({
     required String courseTitle,
     required List<String> reviews,
