@@ -7,7 +7,7 @@ import 'utils/app_text_styles.dart';
 import 'routes.dart';
 import '../services/ai_service.dart';
 
-class SpecificCourseScreen extends StatelessWidget {
+class SpecificCourseScreen extends StatefulWidget {
   final String courseId;
   final String courseTitle;
 
@@ -16,6 +16,41 @@ class SpecificCourseScreen extends StatelessWidget {
     required this.courseId,
     required this.courseTitle,
   });
+
+  @override
+  State<SpecificCourseScreen> createState() => _SpecificCourseScreenState();
+}
+
+class _SpecificCourseScreenState extends State<SpecificCourseScreen> {
+  final AiService _aiService = AiService();
+  String? _aiInsight;
+  bool _aiLoading = false;
+  String _lastReviewsKey = '';
+
+  Future<void> _refreshInsight(List<FeedbackItem> reviews) async {
+    final key = reviews.map((r) => r.text).join('||');
+    if (key == _lastReviewsKey) return;
+    _lastReviewsKey = key;
+
+    setState(() => _aiLoading = true);
+
+    try {
+      final avg = reviews.isEmpty
+          ? 0.0
+          : reviews.fold(0.0, (s, r) => s + r.rating) / reviews.length;
+
+      final insight = await _aiService.generateCourseInsights(
+        courseTitle: widget.courseTitle,
+        reviews: reviews.map((r) => r.text).toList(),
+        avgRating: avg,
+      );
+      if (mounted) setState(() => _aiInsight = insight);
+    } catch (_) {
+      if (mounted) setState(() => _aiInsight = 'Could not load AI insights.');
+    } finally {
+      if (mounted) setState(() => _aiLoading = false);
+    }
+  }
 
   Widget _buildStarRow(double rating) {
     final filled = rating.round().clamp(0, 5);
@@ -98,20 +133,25 @@ class SpecificCourseScreen extends StatelessWidget {
         ),
         centerTitle: true,
         title: Text(
-          courseTitle,
+          widget.courseTitle,
           style: AppTextStyles.pageTitle.copyWith(
             color: isDark ? Colors.white : AppColors.textDark,
           ),
         ),
       ),
       body: StreamBuilder<List<FeedbackItem>>(
-        stream: FeedbackService().getReviewsByCourse(courseId),
+        stream: FeedbackService().getReviewsByCourse(widget.courseId),
         builder: (context, snapshot) {
           final reviews = snapshot.data ?? [];
           final avg = reviews.isEmpty
               ? 0.0
-              : reviews.fold(0.0, (sum, r) => sum + r.rating) /
-                  reviews.length;
+              : reviews.fold(0.0, (sum, r) => sum + r.rating) / reviews.length;
+
+          if (snapshot.hasData && reviews.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _refreshInsight(reviews);
+            });
+          }
 
           return SafeArea(
             child: Padding(
@@ -119,6 +159,7 @@ class SpecificCourseScreen extends StatelessWidget {
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               child: Column(
                 children: [
+                  // ── Avg rating + Syllabus row ──
                   Row(
                     children: [
                       Expanded(
@@ -192,6 +233,8 @@ class SpecificCourseScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 14),
+
+                  // ── AI Insights Card ──
                   Card(
                     color: isDark
                         ? const Color(0xFF1E1E1E)
@@ -211,33 +254,52 @@ class SpecificCourseScreen extends StatelessWidget {
                           horizontal: 14, vertical: 16),
                       child: Column(
                         children: [
-                          Text(
-                            'AI-Generated Insights',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color:
-                                  isDark ? Colors.white : AppColors.textDark,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.auto_awesome,
+                                  size: 16, color: Colors.amber),
+                              const SizedBox(width: 6),
+                              Text(
+                                'AI-Generated Insights',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textDark,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            'Students consistently mention high workload. Grading is strict.',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.bodyText.copyWith(
-                              color: isDark
-                                  ? Colors.white70
-                                  : AppColors.textDark,
-                            ),
-                          ),
+                          _aiLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2),
+                                )
+                              : Text(
+                                  reviews.isEmpty
+                                      ? 'Add reviews to see AI insights.'
+                                      : (_aiInsight ?? 'Analyzing reviews...'),
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.bodyText.copyWith(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : AppColors.textDark,
+                                  ),
+                                ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
+
+                  // ── Reviews list ──
                   Expanded(
-                    child: snapshot.connectionState ==
-                            ConnectionState.waiting
+                    child: snapshot.connectionState == ConnectionState.waiting
                         ? const Center(child: CircularProgressIndicator())
                         : reviews.isEmpty
                             ? Center(
@@ -253,11 +315,12 @@ class SpecificCourseScreen extends StatelessWidget {
                             : ListView.builder(
                                 itemCount: reviews.length,
                                 itemBuilder: (context, index) =>
-                                    _buildReviewCard(
-                                        reviews[index], isDark),
+                                    _buildReviewCard(reviews[index], isDark),
                               ),
                   ),
                   const SizedBox(height: 8),
+
+                  // ── Add Review button ──
                   SizedBox(
                     width: double.infinity,
                     height: 62,
@@ -267,8 +330,8 @@ class SpecificCourseScreen extends StatelessWidget {
                           context,
                           AppRoutes.verifyEnrollment,
                           arguments: VerifyEnrollmentRouteArgs(
-                            courseCode: courseId,
-                            courseName: courseTitle,
+                            courseCode: widget.courseId,
+                            courseName: widget.courseTitle,
                           ),
                         );
                       },
