@@ -1,3 +1,14 @@
+/// Arguments for [AppRoutes.addReview].
+class AddReviewRouteArgs {
+  final String courseId;
+  final String courseTitle;
+
+  const AddReviewRouteArgs({
+    required this.courseId,
+    required this.courseTitle,
+  });
+}
+
 /// Arguments for [AppRoutes.specificCourse].
 class SpecificCourseRouteArgs {
   final String courseId;

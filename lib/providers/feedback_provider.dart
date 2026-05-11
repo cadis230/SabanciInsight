@@ -11,6 +11,7 @@ class FeedbackProvider extends ChangeNotifier {
 
   List<FeedbackItem> feedbacks = [];
   bool isLoading = true;
+  Stream<List<FeedbackItem>>? feedbacksStream;
 
   FeedbackProvider() {
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
@@ -28,7 +29,8 @@ class FeedbackProvider extends ChangeNotifier {
   void _subscribe(String uid) {
     isLoading = true;
     notifyListeners();
-    _sub = _service.getFeedbacks(uid).listen(
+    feedbacksStream = _service.getFeedbacks(uid);
+    _sub = feedbacksStream!.listen(
       (data) {
         feedbacks = data;
         isLoading = false;
@@ -42,7 +44,7 @@ class FeedbackProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> add(String text, double rating) async {
+  Future<void> add(String text, double rating, {String? courseId}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       throw StateError('Cannot add feedback without an authenticated user.');
@@ -52,6 +54,7 @@ class FeedbackProvider extends ChangeNotifier {
       text: text,
       rating: rating,
       createdBy: user.uid,
+      courseId: courseId,
     );
     await _service.addFeedback(item);
   }

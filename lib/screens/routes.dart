@@ -47,7 +47,14 @@ class AppRoutes {
         courseTitle: args?.courseTitle ?? 'CS 300  Algorithms',
       );
     },
-    addReview: (_) => const AddReviewScreen(),
+    addReview: (context) {
+      final raw = ModalRoute.of(context)?.settings.arguments;
+      final args = raw is AddReviewRouteArgs ? raw : null;
+      return AddReviewScreen(
+        courseId: args?.courseId ?? '',
+        courseTitle: args?.courseTitle ?? 'Review',
+      );
+    },
     feedbacks: (_) => const LastFeedbacksScreen(),
     forgotPassword: (_) => const ForgotPasswordScreen(),
     verifyEnrollment: (context) {

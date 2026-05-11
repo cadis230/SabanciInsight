@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/feedback_provider.dart';
 import 'routes.dart';
+import 'enrollment_route_args.dart';
 
 class AddReviewScreen extends StatefulWidget {
-  const AddReviewScreen({super.key});
+  final String courseId;
+  final String courseTitle;
+
+  const AddReviewScreen({
+    super.key,
+    required this.courseId,
+    required this.courseTitle,
+  });
 
   @override
   State<AddReviewScreen> createState() => _AddReviewScreenState();
@@ -11,8 +21,47 @@ class AddReviewScreen extends StatefulWidget {
 class _AddReviewScreenState extends State<AddReviewScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _commentController = TextEditingController();
+  int _rating = 0;
+  bool _isLoading = false;
 
-  int rating = 0;
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_rating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a rating')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await context.read<FeedbackProvider>().add(
+            _commentController.text.trim(),
+            _rating.toDouble(),
+            courseId: widget.courseId,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review submitted successfully')),
+      );
+      Navigator.of(context).popUntil(
+        (route) => route.settings.name == AppRoutes.specificCourse,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit review: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +77,9 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                const SizedBox(height: 20),
                 Text(
-                  "CS310",
+                  widget.courseTitle,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -38,7 +88,7 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Add Review",
+                  'Add Review',
                   style: TextStyle(
                     color: isDark ? Colors.white70 : Colors.black87,
                   ),
@@ -49,8 +99,9 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black,
                   ),
+                  maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: "Write your review here.",
+                    hintText: 'Write your review here.',
                     hintStyle: TextStyle(
                       color: isDark ? Colors.white54 : Colors.black54,
                     ),
@@ -61,17 +112,13 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
-                    errorStyle: const TextStyle(
-                      color: Colors.redAccent,
-                    ),
+                    errorStyle: const TextStyle(color: Colors.redAccent),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Please enter a comment";
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a comment';
                     }
-                    if (value.length < 5) {
-                      return "Comment too short";
-                    }
+                    if (value.trim().length < 5) return 'Comment too short';
                     return null;
                   },
                 ),
@@ -79,7 +126,7 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    "Rating",
+                    'Rating',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black,
@@ -91,13 +138,9 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (index) {
                     return IconButton(
-                      onPressed: () {
-                        setState(() {
-                          rating = index + 1;
-                        });
-                      },
+                      onPressed: () => setState(() => _rating = index + 1),
                       icon: Icon(
-                        index < rating ? Icons.star : Icons.star_border,
+                        index < _rating ? Icons.star : Icons.star_border,
                         size: 30,
                         color: Colors.amber,
                       ),
@@ -105,87 +148,32 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                   }),
                 ),
                 const SizedBox(height: 40),
-                GestureDetector(
-                  onTap: () {
-                    if (_formKey.currentState!.validate()) {
-                      if (rating == 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Please select a rating"),
-                          ),
-                        );
-                        return;
-                      }
-
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          backgroundColor:
-                              isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                          title: Text(
-                            "Success",
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          content: Text(
-                            "Review submitted!",
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.black87,
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-
-                                Navigator.pushNamedAndRemoveUntil(
-                                  this.context,
-                                  AppRoutes.specificCourse,
-                                  (route) => false,
-                                );
-
-                                Future.delayed(
-                                  const Duration(milliseconds: 300),
-                                  () {
-                                    ScaffoldMessenger.of(this.context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Review submitted successfully",
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                              child: const Text("OK"),
-                            )
-                          ],
-                        ),
-                      );
-                    }
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                      border: Border.all(
-                        color:
-                            isDark ? const Color(0xFF333333) : Colors.black,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Submit Review",
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.w600,
-                        ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isDark ? const Color(0xFF1E1E1E) : Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Submit Review',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
                   ),
                 ),
               ],
@@ -197,32 +185,20 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         currentIndex: 0,
         selectedItemColor: isDark ? Colors.white : Colors.black,
-        unselectedItemColor: isDark ? Colors.grey : Colors.grey,
+        unselectedItemColor: Colors.grey,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: '',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
         ],
         onTap: (index) {
           if (index == 0) {
             Navigator.pushNamedAndRemoveUntil(
-              context,
-              AppRoutes.main,
-              (route) => false,
-            );
+                context, AppRoutes.main, (route) => false);
           } else if (index == 1) {
             Navigator.pushNamedAndRemoveUntil(
-              context,
-              AppRoutes.profile,
-              (route) => false,
-            );
+                context, AppRoutes.profile, (route) => false);
           }
         },
       ),
