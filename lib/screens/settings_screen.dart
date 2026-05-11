@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/enrollment_verification_service.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
 import 'routes.dart';
@@ -140,7 +142,7 @@ class SettingsScreen extends StatelessWidget {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (context) => AlertDialog(
+                    builder: (dialogContext) => AlertDialog(
                       backgroundColor:
                           isDark ? const Color(0xFF1E1E1E) : Colors.white,
                       title: Text(
@@ -150,15 +152,43 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                       content: Text(
-                        'This is a demo action.',
+                        'Are you sure you want to delete your account? This action cannot be undone.',
                         style: TextStyle(
                           color: isDark ? Colors.white70 : Colors.black87,
                         ),
                       ),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('OK'),
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            try {
+                              await context.read<AuthProvider>().deleteAccount();
+                              if (context.mounted) {
+                                Navigator.of(context).pushNamedAndRemoveUntil(
+                                  '/',
+                                  (route) => false,
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                Navigator.pop(dialogContext);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Error: You may need to log in again to delete your account.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(color: AppColors.danger),
+                          ),
                         ),
                       ],
                     ),
@@ -184,9 +214,53 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 18),
               buildButton(
                 icon: Icons.description_outlined,
-                text: 'Edit Uploaded Transcript',
+                text: 'Delete Uploaded Transcript',
                 isDark: isDark,
-                onTap: () {},
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      backgroundColor:
+                          isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      title: Text(
+                        'Delete Transcript',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      content: Text(
+                        'Are you sure you want to delete your uploaded transcript data? You will need to re-verify your courses.',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            final userId = FirebaseAuth.instance.currentUser?.uid;
+                            if (userId != null) {
+                              await EnrollmentVerificationService().deleteAllForUser(userId);
+                              if (context.mounted) {
+                                Navigator.pop(dialogContext);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Transcript deleted successfully.')),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(color: AppColors.danger),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 18),
               buildButton(
