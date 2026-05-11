@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
+import 'enrollment_route_args.dart';
 import 'routes.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -46,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 22),
               Text(
-                'Jane Doe',
+                FirebaseAuth.instance.currentUser?.email?.split('@')[0] ?? 'Profile',
                 style: AppTextStyles.pageTitle.copyWith(
                   color: isDark ? Colors.white : AppColors.textDark,
                 ),
@@ -77,6 +79,39 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   child: Text(
                     'View my transcript',
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: isDark ? Colors.white : AppColors.textDark,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.verifyEnrollment,
+                      arguments: VerifyEnrollmentRouteArgs.profileTranscriptUpload,
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: isDark
+                        ? const Color(0xFF1E1E1E)
+                        : AppColors.cardBackground,
+                    side: BorderSide(
+                      color:
+                          isDark ? const Color(0xFF333333) : AppColors.textLight,
+                      width: 1.4,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: Text(
+                    'Upload / update transcript',
                     style: AppTextStyles.cardTitle.copyWith(
                       color: isDark ? Colors.white : AppColors.textDark,
                     ),

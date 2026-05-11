@@ -89,9 +89,11 @@ class TranscriptScreen extends StatelessWidget {
                   return bTime.compareTo(aTime); // Latest first
                 });
 
-                final latestDoc = docs.first;
-                final verificationItem = EnrollmentVerificationItem.fromFirestore(latestDoc);
-                final courses = verificationItem.extractedCourseCodes;
+                final items = docs
+                    .map((d) => EnrollmentVerificationItem.fromFirestore(d))
+                    .toList();
+                final latestItem = items.first;
+                final courses = List<String>.from(latestItem.extractedCourseCodes);
 
                 if (courses.isEmpty) {
                   return const Center(child: Text('No courses found in the transcript.'));
@@ -106,7 +108,7 @@ class TranscriptScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Last Uploaded: ${verificationItem.fileName}',
+                            'Latest file: ${latestItem.fileName}',
                             style: AppTextStyles.bodyText.copyWith(
                               fontWeight: FontWeight.bold,
                               color: isDark ? Colors.white70 : Colors.black87,
@@ -114,10 +116,20 @@ class TranscriptScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Date: ${verificationItem.createdAt?.toString().split('.')[0] ?? 'N/A'}',
+                            'Date: ${latestItem.createdAt?.toString().split('.')[0] ?? 'N/A'}',
                             style: AppTextStyles.bodyText.copyWith(
                               color: isDark ? Colors.white54 : Colors.black54,
                               fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Each new upload replaces the previous transcript; '
+                            'this list always reflects your latest saved file.',
+                            style: AppTextStyles.bodyText.copyWith(
+                              color: isDark ? Colors.white54 : Colors.black54,
+                              fontSize: 12,
+                              height: 1.35,
                             ),
                           ),
                         ],

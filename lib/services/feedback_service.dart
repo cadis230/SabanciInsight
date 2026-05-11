@@ -12,6 +12,14 @@ class FeedbackService {
         .map((snap) => snap.docs.map(FeedbackItem.fromFirestore).toList());
   }
 
+  Stream<List<FeedbackItem>> getReviewsByCourse(String courseId) {
+    return _col
+        .where('courseId', isEqualTo: courseId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map(FeedbackItem.fromFirestore).toList());
+  }
+
   Future<void> addFeedback(FeedbackItem item) {
     return _col.add(item.toMap());
   }
