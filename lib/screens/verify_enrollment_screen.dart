@@ -83,7 +83,7 @@ class _VerifyEnrollmentScreenState extends State<VerifyEnrollmentScreen> {
       debugPrint('Transcript parse error: $e');
       setState(() {
         _codesFromPdf = [];
-        _parseError = 'PDF metni okunamadı. Farklı bir transcript PDF’i deneyin.';
+        _parseError = "PDF metni okunamadı. Farklı bir transcript PDF'i deneyin.";
       });
     } finally {
       if (mounted) setState(() => _parsing = false);
@@ -209,7 +209,7 @@ class _VerifyEnrollmentScreenState extends State<VerifyEnrollmentScreen> {
                   const _ProgressStepsCard(),
                   const SizedBox(height: 16),
                   Text(
-                    'Resmi transkript PDF\'inizi yükleyin. Metin seçilebilir '
+                    "Resmi transkript PDF'inizi yükleyin. Metin seçilebilir "
                     '(Banner) PDF’lerde ders kodları otomatik taranır. '
                     '${widget.courseCode} çıkan listede yoksa doğrulama tamamlanmaz.',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -355,7 +355,7 @@ class _CourseCodesPanel extends StatelessWidget {
           const SizedBox(height: 10),
           if (codesFromPdf.isEmpty)
             Text(
-              'Henüz kod yok. Metin seçilebilir bir transkript PDF\'i yükleyin.',
+              "Henüz kod yok. Metin seçilebilir bir transkript PDF'i yükleyin.",
               style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
             )
           else
