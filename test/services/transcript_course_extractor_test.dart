@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sabanci_insight/services/transcript_course_extractor.dart';
+import 'package:project_step_3/services/transcript_course_extractor.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 void main() {

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'routes.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import '../providers/auth_provider.dart';
 
-final _auth = FirebaseAuth.instance;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,12 +24,7 @@ class _LoginScreenState extends State<LoginScreen>
   late Animation<double> _fadeAnimation;
 
 
-  Future<void> signIn(String email, String password) async {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-  }
+
 
   @override
   void initState() {
@@ -59,36 +52,22 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _handleSignIn() async {
+
     if (_formKey.currentState!.validate()) {
+
       final email = _emailController.text;
       final password = _passwordController.text;
 
       setState(() => _isLoading = true);
 
-      try {
-        await context.read<AuthProvider>().signIn(email, password);
-      } on FirebaseAuthException catch (e) {
-        String message;
+      final error = await context
+          .read<AuthProvider>()
+          .signIn(email, password);
 
-        switch (e.code) {
-          case 'user-not-found':
-            message = "No user found with this email";
-            break;
-          case 'wrong-password':
-            message = "Incorrect password";
-            break;
-          case 'invalid-email':
-            message = "Invalid email format";
-            break;
-          case 'invalid-credential':
-            message = "Email or password is incorrect";
-            break;
-          default:
-            message = "Login failed (${e.code})";
-        }
+      if (error != null) {
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
+          SnackBar(content: Text(error)),
         );
       }
 

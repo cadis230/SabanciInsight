@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthProvider extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
@@ -19,12 +22,60 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> signIn(String email, String password) async {
-    await _auth.signInWithEmailAndPassword(email: email, password: password);
+  Future<String?> signIn(String email, String password) async {
+    try {
+
+      await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      return null;
+
+    } on FirebaseAuthException catch (e) {
+      print(e.code);
+
+      switch (e.code) {
+
+        case 'invalid-credential':
+          return 'Email or password is incorrect';
+
+        case 'network-request-failed':
+          return 'No internet connection';
+
+        default:
+          return 'Login failed';
+      }
+    }
   }
 
-  Future<void> signUp(String email, String password) async {
-    await _auth.createUserWithEmailAndPassword(email: email, password: password);
+  Future<String?> signUp(String email, String password) async {
+    try {
+
+      await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      return null;
+
+    } on FirebaseAuthException catch (e) {
+
+      switch (e.code) {
+
+        case 'email-already-in-use':
+          return 'Email already in use';
+
+        case 'weak-password':
+          return 'Password is too weak';
+
+        case 'invalid-email':
+          return 'Invalid email address';
+
+        default:
+          return 'Registration failed';
+      }
+    }
   }
 
   Future<void> signOut() async {
@@ -41,4 +92,27 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+  Future<String?> resetPassword(String email) async {
+    try {
+
+      await _auth.sendPasswordResetEmail(email: email);
+
+      return null;
+
+    } on FirebaseAuthException catch (e) {
+
+      switch (e.code) {
+
+        case 'user-not-found':
+          return 'No user found with this email';
+
+        case 'invalid-email':
+          return 'Invalid email address';
+
+        default:
+          return e.message ?? 'Password reset failed';
+      }
+    }
+  }
 }
+
