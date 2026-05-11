@@ -234,10 +234,7 @@ class SpecificCourseScreen extends StatelessWidget {
                     Navigator.pushNamed(
                       context,
                       AppRoutes.verifyEnrollment,
-                      arguments: const VerifyEnrollmentRouteArgs(
-                        courseCode: 'CS300',
-                        courseName: 'Algorithms',
-                      ),
+                      arguments: VerifyEnrollmentRouteArgs.defaultArgs,
                     );
                   },
                   icon: Icon(

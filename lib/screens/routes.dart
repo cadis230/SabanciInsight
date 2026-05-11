@@ -45,10 +45,7 @@ class AppRoutes {
       final raw = ModalRoute.of(context)?.settings.arguments;
       final args = raw is VerifyEnrollmentRouteArgs
           ? raw
-          : const VerifyEnrollmentRouteArgs(
-              courseCode: 'CS300',
-              courseName: 'Algorithms',
-            );
+          : VerifyEnrollmentRouteArgs.defaultArgs;
       return VerifyEnrollmentScreen(
         courseCode: args.courseCode,
         courseName: args.courseName,

@@ -1,5 +1,12 @@
 /// Arguments for [AppRoutes.verifyEnrollment].
 class VerifyEnrollmentRouteArgs {
+  static const defaultCourseCode = 'CS300';
+  static const defaultCourseName = 'Algorithms';
+  static const defaultArgs = VerifyEnrollmentRouteArgs(
+    courseCode: defaultCourseCode,
+    courseName: defaultCourseName,
+  );
+
   final String courseCode;
   final String courseName;
   final bool fromReviewFlow;
