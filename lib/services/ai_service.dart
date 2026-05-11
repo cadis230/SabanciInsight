@@ -2,15 +2,18 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AiService {
-  static const String _apiKey = 'console.anthropic.com';
-  static const String _url = 'https://api.anthropic.com/v1/messages';
+  static const String _apiKey = 'xai-YvhELVKEw8rpM7yCSTpAVtU9UsbcRuzdHqNHFi5d0QONmgZgPePNwOUbRu3sbPbphfHjiIL5rXQjEtpv';
+
+  static const String _url = 'https://api.x.ai/v1/chat/completions';
 
   Future<String> generateCourseInsights({
     required String courseTitle,
     required List<String> reviews,
     required double avgRating,
   }) async {
-    if (reviews.isEmpty) return 'No reviews yet to summarize.';
+    if (reviews.isEmpty) {
+      return 'No reviews yet to summarize.';
+    }
 
     final reviewText = reviews
         .asMap()
@@ -23,35 +26,59 @@ You are an AI assistant for a university course review platform called SabanciIn
 
 Course: "$courseTitle"
 Average Rating: ${avgRating.toStringAsFixed(1)}/5
+
 Student Reviews:
 $reviewText
 
 Based on these reviews, write a concise 2-3 sentence summary of what students think about this course.
-Mention key themes (workload, grading, content quality, instructor, etc.) that appear in the reviews.
-Be objective and helpful. Only return the summary text, nothing else.
+
+Mention themes like:
+- workload
+- grading
+- difficulty
+- instructor quality
+- usefulness
+- exams/projects
+
+Be objective and helpful.
+
+Only return the summary text.
 ''';
 
     final response = await http.post(
       Uri.parse(_url),
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': _apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': 'Bearer $_apiKey',
       },
       body: jsonEncode({
-        'model': 'claude-sonnet-4-20250514',
-        'max_tokens': 300,
+        'model': 'grok-3-mini',
         'messages': [
-          {'role': 'user', 'content': prompt}
+          {
+            'role': 'system',
+            'content':
+                'You summarize university course reviews clearly and concisely.'
+          },
+          {
+            'role': 'user',
+            'content': prompt,
+          }
         ],
+        'temperature': 0.7,
+        'max_tokens': 200,
       }),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['content'][0]['text'] as String;
+
+      return data['choices'][0]['message']['content']
+          .toString()
+          .trim();
     } else {
-      throw Exception('AI error: ${response.statusCode}');
+      throw Exception(
+        'xAI API Error: ${response.statusCode}\n${response.body}',
+      );
     }
   }
 }
