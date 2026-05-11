@@ -1,12 +1,7 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 class AiService {
-  static const String _apiKey =
-      'xai-YvhELVKEw8rpM7yCSTpAVtU9UsbcRuzdHqNHFi5d0QONmgZgPePNwOUbRu3sbPbphfHjiIL5rXQjEtpv';
-
-  static const String _url =
-      'https://api.x.ai/v1/chat/completions';
+  static const String _apiKey = 'AIzaSyBUAK5qboGxVI9wEIqiVWM7mfs7-BiRXHs';
 
   Future<String> generateCourseInsights({
     required String courseTitle,
@@ -17,40 +12,30 @@ class AiService {
       return 'No reviews yet to summarize.';
     }
 
-    final reviewText = reviews.join('\n');
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: _apiKey,
+        systemInstruction: Content.system(
+          'Sen profesyonel bir veri analiz asistanısın. '
+          'Sana bir dersin öğrenciler tarafından yapılan yorumlarını vereceğim. '
+          'Bu yorumları objektif bir şekilde değerlendirerek kısa, net ve yapıcı (1-2 cümlelik) '
+          'bir özet çıkarmanı istiyorum. Sonucu daima Türkçe ver.',
+        ),
+      );
 
-    final response = await http.post(
-      Uri.parse(_url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $_apiKey',
-      },
-      body: jsonEncode({
-        "messages": [
-          {
-            "role": "system",
-            "content":
-                "You summarize course reviews briefly."
-          },
-          {
-            "role": "user",
-            "content":
-                "Summarize these reviews for $courseTitle:\n$reviewText"
-          }
-        ],
-        "model": "grok-3-mini",
-        "temperature": 0.7
-      }),
-    );
+      final reviewText = reviews.join('\n- ');
+      final prompt = 'Ders Adı: $courseTitle\n'
+          'Ortalama Puan: $avgRating/5.0\n'
+          'Yorumlar:\n- $reviewText';
 
-    print(response.body);
+      final content = [Content.text(prompt)];
+      final response = await model.generateContent(content);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      return data['choices'][0]['message']['content'];
-    } else {
-      throw Exception(response.body);
+      return response.text ?? 'Özet oluşturulamadı.';
+    } catch (e) {
+      print('AI Service Error: $e');
+      return 'Özet oluşturulurken bir hata oluştu.';
     }
   }
 }
