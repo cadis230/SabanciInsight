@@ -119,7 +119,7 @@ class MainPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'My feedbacks',
+                          'My Reviews',
                           style: AppTextStyles.featureLabel.copyWith(
                             color: isDark ? Colors.white : Colors.black,
                           ),
