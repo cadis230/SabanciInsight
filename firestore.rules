@@ -1,3 +1,6 @@
+// Publish: Firebase Console → Build → Firestore Database → Rules → Paste → Publish
+// Or (Firebase CLI installed): firebase deploy --only firestore:rules
+// Project: sabanciinsight (.firebaserc)
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -8,6 +11,14 @@ service cloud.firestore {
         && request.auth.uid == resource.data.createdBy;
 
       // On create, enforce that createdBy matches the authenticated user
+      allow create: if request.auth != null
+        && request.resource.data.createdBy == request.auth.uid;
+    }
+
+    match /enrollment_verifications/{docId} {
+      allow read, update, delete: if request.auth != null
+        && request.auth.uid == resource.data.createdBy;
+
       allow create: if request.auth != null
         && request.resource.data.createdBy == request.auth.uid;
     }

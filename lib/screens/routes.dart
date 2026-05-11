@@ -10,6 +10,7 @@ import 'specific_course_screen.dart';
 import 'add_review_screen.dart';
 import 'last_feedbacks_screen.dart';
 import 'forgot_password_flow.dart';
+import 'enrollment_route_args.dart';
 import 'verify_enrollment_screen.dart';
 import 'verification_successful_screen.dart';
 
@@ -40,7 +41,25 @@ class AppRoutes {
     addReview: (_) => const AddReviewScreen(),
     feedbacks: (_) => const LastFeedbacksScreen(),
     forgotPassword: (_) => const ForgotPasswordScreen(),
-    verifyEnrollment: (_) => const VerifyEnrollmentScreen(),
-    verificationSuccess: (_) => const VerificationSuccessfulScreen(),
+    verifyEnrollment: (context) {
+      final raw = ModalRoute.of(context)?.settings.arguments;
+      final args = raw is VerifyEnrollmentRouteArgs
+          ? raw
+          : const VerifyEnrollmentRouteArgs(
+              courseCode: 'CS300',
+              courseName: 'Algorithms',
+            );
+      return VerifyEnrollmentScreen(
+        courseCode: args.courseCode,
+        courseName: args.courseName,
+        fromReviewFlow: args.fromReviewFlow,
+      );
+    },
+    verificationSuccess: (context) {
+      final raw = ModalRoute.of(context)?.settings.arguments;
+      final args =
+          raw is VerificationSuccessRouteArgs ? raw : null;
+      return VerificationSuccessfulScreen(args: args);
+    },
   };
 }
