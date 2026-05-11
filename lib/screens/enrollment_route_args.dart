@@ -1,3 +1,14 @@
+/// Arguments for [AppRoutes.specificCourse].
+class SpecificCourseRouteArgs {
+  final String courseId;
+  final String courseTitle;
+
+  const SpecificCourseRouteArgs({
+    required this.courseId,
+    required this.courseTitle,
+  });
+}
+
 /// Arguments for [AppRoutes.verifyEnrollment].
 class VerifyEnrollmentRouteArgs {
   static const defaultCourseCode = 'CS300';
