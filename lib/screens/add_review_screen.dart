@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/feedback_provider.dart';
+import '../services/enrollment_verification_service.dart';
+import '../services/transcript_course_extractor.dart';
 import 'routes.dart';
-import 'enrollment_route_args.dart';
 
 class AddReviewScreen extends StatefulWidget {
   final String courseId;
@@ -39,8 +41,35 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
       return;
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to post a review.')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
+      final service = EnrollmentVerificationService();
+      final items = await service.listForUser(user.uid);
+      final merged = EnrollmentVerificationService.mergedCourseCodes(items);
+      if (!mounted) return;
+      if (!TranscriptCourseExtractor.listContainsCourse(
+        merged,
+        widget.courseId,
+      )) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'You cannot post a review: ${widget.courseId} is not on your '
+              'saved transcript. Upload a transcript that lists this course first.',
+            ),
+          ),
+        );
+        return;
+      }
+
       await context.read<FeedbackProvider>().add(
             _commentController.text.trim(),
             _rating.toDouble(),
@@ -138,7 +167,9 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (index) {
                     return IconButton(
-                      onPressed: () => setState(() => _rating = index + 1),
+                      onPressed: _isLoading
+                          ? null
+                          : () => setState(() => _rating = index + 1),
                       icon: Icon(
                         index < _rating ? Icons.star : Icons.star_border,
                         size: 30,

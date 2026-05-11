@@ -149,7 +149,7 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                         if (a != null && a.extractedCourseCodes.isNotEmpty) ...[
                           const SizedBox(height: 14),
                           const Text(
-                            'Transkriptten okunan ders kodları',
+                            'Course codes read from transcript',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -205,16 +205,23 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                     height: 52,
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.addReview,
-                          arguments: AddReviewRouteArgs(
-                            courseId: a?.courseCode ?? '',
-                            courseTitle: a != null
-                                ? '${a.courseCode} — ${a.courseName}'
-                                : 'Review',
-                          ),
-                        );
+                        if (a != null) {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.addReview,
+                            arguments: AddReviewRouteArgs(
+                              courseId: a.courseCode,
+                              courseTitle:
+                                  '${a.courseCode} — ${a.courseName}',
+                            ),
+                          );
+                        } else {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.addReview,
+                            arguments: AddReviewRouteArgs.defaultArgs,
+                          );
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF2563EB),
@@ -234,7 +241,20 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 52,
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () {
+                        if (a != null) {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.verifyEnrollment,
+                            arguments: VerifyEnrollmentRouteArgs(
+                              courseCode: a.courseCode,
+                              courseName: a.courseName,
+                            ),
+                          );
+                        } else {
+                          Navigator.pushNamed(context, AppRoutes.verifyEnrollment);
+                        }
+                      },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF6B7280),
                         side: const BorderSide(color: Color(0xFFD1D5DB)),
@@ -243,7 +263,7 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        'Upload another transcript',
+                        'Upload updated transcript',
                         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                       ),
                     ),

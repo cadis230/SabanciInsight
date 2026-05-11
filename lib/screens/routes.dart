@@ -49,10 +49,10 @@ class AppRoutes {
     },
     addReview: (context) {
       final raw = ModalRoute.of(context)?.settings.arguments;
-      final args = raw is AddReviewRouteArgs ? raw : null;
+      final args = raw is AddReviewRouteArgs ? raw : AddReviewRouteArgs.defaultArgs;
       return AddReviewScreen(
-        courseId: args?.courseId ?? '',
-        courseTitle: args?.courseTitle ?? 'Review',
+        courseId: args.courseId,
+        courseTitle: args.courseTitle,
       );
     },
     feedbacks: (_) => const LastFeedbacksScreen(),
@@ -66,6 +66,7 @@ class AppRoutes {
         courseCode: args.courseCode,
         courseName: args.courseName,
         fromReviewFlow: args.fromReviewFlow,
+        isStandaloneTranscriptUpload: args.isStandaloneTranscriptUpload,
       );
     },
     verificationSuccess: (context) {

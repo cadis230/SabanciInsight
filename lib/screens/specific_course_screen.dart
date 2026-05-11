@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/feedback_service.dart';
 import 'models/feedback_item.dart';
@@ -6,6 +7,8 @@ import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
 import 'routes.dart';
 import '../services/ai_service.dart';
+import '../services/enrollment_verification_service.dart';
+import '../services/transcript_course_extractor.dart';
 
 class SpecificCourseScreen extends StatefulWidget {
   final String courseId;
@@ -325,15 +328,55 @@ class _SpecificCourseScreenState extends State<SpecificCourseScreen> {
                     width: double.infinity,
                     height: 62,
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.verifyEnrollment,
-                          arguments: VerifyEnrollmentRouteArgs(
-                            courseCode: widget.courseId,
-                            courseName: widget.courseTitle,
-                          ),
-                        );
+                      onPressed: () async {
+                        final user = FirebaseAuth.instance.currentUser;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please sign in to add a review.'),
+                            ),
+                          );
+                          return;
+                        }
+                        try {
+                          final service = EnrollmentVerificationService();
+                          final items = await service.listForUser(user.uid);
+                          final merged =
+                              EnrollmentVerificationService.mergedCourseCodes(
+                                  items);
+                          if (!context.mounted) return;
+                          if (TranscriptCourseExtractor.listContainsCourse(
+                            merged,
+                            widget.courseId,
+                          )) {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.addReview,
+                              arguments: AddReviewRouteArgs(
+                                courseId: widget.courseId,
+                                courseTitle: widget.courseTitle,
+                              ),
+                            );
+                          } else {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.verifyEnrollment,
+                              arguments: VerifyEnrollmentRouteArgs(
+                                courseCode: widget.courseId,
+                                courseName: widget.courseTitle,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Could not check your transcript. Try again.',
+                              ),
+                            ),
+                          );
+                        }
                       },
                       icon: Icon(
                         Icons.add_circle,
