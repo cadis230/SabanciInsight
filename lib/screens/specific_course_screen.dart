@@ -5,6 +5,7 @@ import 'enrollment_route_args.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
 import 'routes.dart';
+import '../services/ai_service.dart';
 
 class SpecificCourseScreen extends StatelessWidget {
   final String courseId;
