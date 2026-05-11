@@ -267,6 +267,33 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.chat_bubble_outline,
                 text: 'Contact Us',
                 isDark: isDark,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor:
+                          isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      title: Text(
+                        'Contact Support',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      content: Text(
+                        'Email: ece.ozdemir@sabanciuniv.edu\n\nWe usually respond within 24 hours.',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),
