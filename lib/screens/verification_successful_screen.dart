@@ -1,24 +1,35 @@
 import 'package:flutter/material.dart';
+import 'enrollment_route_args.dart';
 import 'routes.dart';
 
 class VerificationSuccessfulScreen extends StatelessWidget {
-  const VerificationSuccessfulScreen({super.key});
+  const VerificationSuccessfulScreen({
+    super.key,
+    this.args,
+  });
+
+  /// Set when opened after Firestore verification; may be null if route opened without args.
+  final VerificationSuccessRouteArgs? args;
+
+  static String _formatDate(DateTime d) {
+    const months = <String>[
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[d.month - 1]} ${d.day}, ${d.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final backgroundColor =
-        isDark ? const Color(0xFF121212) : const Color(0xFFF3F4F6);
-    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderColor =
-        isDark ? const Color(0xFF333333) : const Color(0xFFD1D5DB);
-    final primaryText = isDark ? Colors.white : const Color(0xFF111827);
-    final secondaryText =
-        isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final a = args;
+    final uploadLabel =
+        a != null ? _formatDate(a.recordedAt) : '—';
+    final courseLine = a != null ? '${a.courseCode} — ${a.courseName}' : '—';
+    final fileLabel = a?.fileName ?? '—';
+    final accountLabel = a?.userEmail ?? '—';
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: const Color(0xFFF3F4F6),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -32,47 +43,41 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: cardColor,
+                      color: const Color(0xFFE5E7EB),
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: IconButton(
                       onPressed: () => Navigator.of(context).maybePop(),
-                      icon: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 20,
-                        color: secondaryText,
-                      ),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Center(
+                  const Center(
                     child: Icon(
                       Icons.verified_outlined,
                       size: 92,
-                      color: primaryText,
+                      color: Color(0xFF111827),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Center(
+                  const Center(
                     child: Text(
                       'Verification Successful',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w700,
-                        color: primaryText,
-                      ),
+                      style: TextStyle(fontSize: 36, fontWeight: FontWeight.w700),
                       textAlign: TextAlign.center,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Center(
                     child: Text(
-                      'Your transcript has been verified. You can now\nreview your completed courses.',
-                      style: TextStyle(
+                      a == null
+                          ? 'Open this screen after completing enrollment verification.'
+                          : 'Your transcript has been verified. You can review details '
+                              'below or continue to your courses / add a review.',
+                      style: const TextStyle(
                         fontSize: 16,
-                        color: isDark
-                            ? Colors.white70
-                            : const Color(0xFF374151),
+                        color: Color(0xFF374151),
                         height: 1.35,
                       ),
                       textAlign: TextAlign.center,
@@ -83,49 +88,88 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: cardColor,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: borderColor),
+                      border: Border.all(color: const Color(0xFFD1D5DB)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x10000000),
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Transcript Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: primaryText,
-                          ),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 10),
-                        Divider(
-                          color: isDark
-                              ? const Color(0xFF333333)
-                              : const Color(0xFFE5E7EB),
-                          height: 1,
-                        ),
+                        const Divider(color: Color(0xFFE5E7EB), height: 1),
                         const SizedBox(height: 12),
-                        _DetailItem(
+                        const _DetailItem(
                           icon: Icons.school_rounded,
                           label: 'University',
                           value: 'Sabanci University',
-                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 12),
+                        _DetailItem(
+                          icon: Icons.menu_book_rounded,
+                          label: 'Verified course',
+                          value: courseLine,
+                        ),
+                        const SizedBox(height: 12),
+                        _DetailItem(
+                          icon: Icons.picture_as_pdf_rounded,
+                          label: 'PDF file',
+                          value: fileLabel,
                         ),
                         const SizedBox(height: 12),
                         _DetailItem(
                           icon: Icons.account_circle_rounded,
-                          label: 'Student ID',
-                          value: '00001',
-                          isDark: isDark,
+                          label: 'Account (Sabanci email)',
+                          value: accountLabel,
                         ),
                         const SizedBox(height: 12),
                         _DetailItem(
                           icon: Icons.calendar_month_rounded,
-                          label: 'Upload Date',
-                          value: 'Oct 24, 2023',
-                          isDark: isDark,
+                          label: 'Upload date',
+                          value: uploadLabel,
                         ),
+                        if (a != null) ...[
+                          const SizedBox(height: 12),
+                          _DetailItem(
+                            icon: Icons.tag_rounded,
+                            label: 'Record ID',
+                            value: a.documentId,
+                          ),
+                        ],
+                        if (a != null && a.extractedCourseCodes.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          const Text(
+                            'Transkriptten okunan ders kodları',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: a.extractedCourseCodes
+                                .map(
+                                  (c) => Chip(
+                                    label: Text(c),
+                                    backgroundColor: const Color(0xFFEFF6FF),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -135,9 +179,10 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                     height: 54,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pushNamed(
+                        Navigator.pushNamedAndRemoveUntil(
                           context,
-                          AppRoutes.addReview,
+                          AppRoutes.main,
+                          (route) => false,
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -150,34 +195,47 @@ class VerificationSuccessfulScreen extends StatelessWidget {
                       ),
                       child: const Text(
                         'Go to My Courses',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () {
+                        Navigator.pushNamed(context, AppRoutes.addReview);
+                      },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isDark
-                            ? Colors.white70
-                            : const Color(0xFF6B7280),
+                        foregroundColor: const Color(0xFF2563EB),
                         side: const BorderSide(color: Color(0xFF2563EB)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(26),
                         ),
                       ),
                       child: const Text(
-                        'Upload Another Transcript',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
+                        'Add review',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF6B7280),
+                        side: const BorderSide(color: Color(0xFFD1D5DB)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
                         ),
+                      ),
+                      child: const Text(
+                        'Upload another transcript',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),
@@ -196,45 +254,41 @@ class _DetailItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
-    required this.isDark,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final primaryText = isDark ? Colors.white : const Color(0xFF111827);
-    final secondaryText =
-        isDark ? Colors.white70 : const Color(0xFF6B7280);
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 26, color: primaryText),
+        Icon(icon, size: 26, color: const Color(0xFF111827)),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: secondaryText,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF6B7280),
+                ),
               ),
-            ),
-            const SizedBox(height: 1),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
-                color: primaryText,
+              const SizedBox(height: 1),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF111827),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
+import 'enrollment_route_args.dart';
 import 'routes.dart';
 
 class SpecificCourseScreen extends StatelessWidget {
@@ -233,6 +234,10 @@ class SpecificCourseScreen extends StatelessWidget {
                     Navigator.pushNamed(
                       context,
                       AppRoutes.verifyEnrollment,
+                      arguments: const VerifyEnrollmentRouteArgs(
+                        courseCode: 'CS300',
+                        courseName: 'Algorithms',
+                      ),
                     );
                   },
                   icon: Icon(

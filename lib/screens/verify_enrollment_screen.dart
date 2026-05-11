@@ -1,25 +1,197 @@
-import 'package:flutter/material.dart';
-import 'routes.dart';
+import 'dart:typed_data';
 
-class VerifyEnrollmentScreen extends StatelessWidget {
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'enrollment_route_args.dart';
+import 'routes.dart';
+import 'models/enrollment_verification_item.dart';
+import '../services/enrollment_verification_service.dart';
+import '../services/transcript_course_extractor.dart';
+
+class VerifyEnrollmentScreen extends StatefulWidget {
+  final String courseCode;
+  final String courseName;
   final bool fromReviewFlow;
 
   const VerifyEnrollmentScreen({
     super.key,
+    required this.courseCode,
+    required this.courseName,
     this.fromReviewFlow = true,
   });
 
   @override
+  State<VerifyEnrollmentScreen> createState() => _VerifyEnrollmentScreenState();
+}
+
+class _VerifyEnrollmentScreenState extends State<VerifyEnrollmentScreen> {
+  final _service = EnrollmentVerificationService();
+
+  String? _pickedFileName;
+  int? _pickedSizeBytes;
+  Uint8List? _pdfBytes;
+  List<String> _codesFromPdf = [];
+  String? _parseError;
+  bool _parsing = false;
+  bool _submitting = false;
+
+  Future<void> _pickPdf() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['pdf'],
+      withData: true,
+    );
+    if (!mounted) return;
+    if (result == null || result.files.isEmpty) return;
+
+    final f = result.files.single;
+    final bytes = f.bytes;
+    if (bytes == null || bytes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'PDF içeriği okunamadı. Web veya bu cihazda tekrar deneyin '
+            '(withData gerekir).',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _pickedFileName = f.name;
+      _pickedSizeBytes = f.size;
+      _pdfBytes = bytes;
+      _parseError = null;
+      _codesFromPdf = [];
+    });
+    await _extractCodesFromPdf(bytes);
+  }
+
+  Future<void> _extractCodesFromPdf(Uint8List bytes) async {
+    setState(() {
+      _parsing = true;
+      _parseError = null;
+    });
+    try {
+      final codes = TranscriptCourseExtractor.extractCourseCodesFromPdf(bytes);
+      if (!mounted) return;
+      setState(() {
+        _codesFromPdf = codes;
+        _parseError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _codesFromPdf = [];
+        _parseError = 'PDF metin okunamadı (taranmış PDF olabilir): $e';
+      });
+    } finally {
+      if (mounted) setState(() => _parsing = false);
+    }
+  }
+
+  Future<void> _submit() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to verify enrollment.')),
+      );
+      return;
+    }
+    if (_pickedFileName == null || _pdfBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Önce PDF seçin (içerik okunmalı).')),
+      );
+      return;
+    }
+
+    final codes = _codesFromPdf;
+    if (codes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Transkriptten ders kodu çıkmadı. Metin seçilebilir (Banner) PDF kullanın.',
+          ),
+        ),
+      );
+      return;
+    }
+    if (!TranscriptCourseExtractor.listContainsCourse(
+      codes,
+      widget.courseCode,
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Bu sayfa için ders (${widget.courseCode}) PDF metninde bulunamadı. '
+            'Doğru transkripti yükleyin.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+
+      final item = EnrollmentVerificationItem(
+        id: '',
+        courseCode: widget.courseCode,
+        courseName: widget.courseName,
+        fileName: _pickedFileName!,
+        fileSizeBytes: _pickedSizeBytes ?? 0,
+        createdBy: user.uid,
+        status: 'verified',
+        extractedCourseCodes: codes,
+      );
+      final docId = await _service.create(item);
+      if (!mounted) return;
+
+      final email = user.email ?? user.uid;
+      final recordedAt = DateTime.now();
+
+      Navigator.pushNamed(
+        context,
+        AppRoutes.verificationSuccess,
+        arguments: VerificationSuccessRouteArgs(
+          documentId: docId,
+          courseCode: widget.courseCode,
+          courseName: widget.courseName,
+          fileName: _pickedFileName!,
+          userEmail: email,
+          recordedAt: recordedAt,
+          extractedCourseCodes: codes,
+        ),
+      );
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      final message = e.code == 'permission-denied'
+          ? 'Firestore izni yok. Firebase Console → Firestore → Rules: '
+              'Bu repodaki firestore.rules dosyasının tamamını yapıştırıp '
+              'Publish edin. (Veya: firebase deploy --only firestore:rules)'
+          : 'Kayıt hatası (${e.code}): ${e.message ?? ""}';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save verification: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF3F4F6);
-    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFD1D5DB);
-    final primaryText = isDark ? Colors.white : const Color(0xFF111827);
-    final secondaryText = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: const Color(0xFFF3F4F6),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -29,75 +201,90 @@ class VerifyEnrollmentScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _Header(isDark: isDark),
-                  const SizedBox(height: 20),
-                  _ProgressStepsCard(
-                    isDark: isDark,
-                    cardColor: cardColor,
-                    borderColor: borderColor,
+                  _Header(
+                    courseCode: widget.courseCode,
+                    courseName: widget.courseName,
                   ),
+                  const SizedBox(height: 20),
+                  const _ProgressStepsCard(),
                   const SizedBox(height: 16),
                   Text(
-                    'Upload your transcript to verify you have completed this course. '
-                    'We only accept official PDF exports.',
-                    style: TextStyle(
-                      color: secondaryText,
+                    'Resmi transkript PDF’inizi yükleyin. Metin seçilebilir '
+                    '(Banner) PDF’lerde ders kodları otomatik taranır. '
+                    '${widget.courseCode} çıkan listede yoksa doğrulama tamamlanmaz.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF374151),
                       height: 1.45,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 18),
-                  UploadBox(
-                    isDark: isDark,
-                    cardColor: cardColor,
-                    borderColor: borderColor,
+                  _UploadArea(
+                    fileName: _pickedFileName,
+                    onTap: (_submitting || _parsing) ? null : _pickPdf,
+                  ),
+                  if (_parsing) ...[
+                    const SizedBox(height: 12),
+                    const LinearProgressIndicator(),
+                  ],
+                  if (_parseError != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _parseError!,
+                      style: const TextStyle(
+                        color: Color(0xFFB91C1C),
+                        fontSize: 13,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  _CourseCodesPanel(
+                    codesFromPdf: _codesFromPdf,
+                    targetCourse: widget.courseCode,
                   ),
                   const SizedBox(height: 14),
-                  _RequirementsCard(
-                    isDark: isDark,
-                    cardColor: cardColor,
-                    borderColor: borderColor,
-                  ),
+                  const _RequirementsCard(),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.verificationSuccess,
-                        );
-                      },
+                      onPressed: _submitting ? null : _submit,
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
                         backgroundColor: const Color(0xFF2563EB),
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: const Color(0xFF93C5FD),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),
                       ),
-                      child: const Text(
-                        'Upload and Continue',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Upload and Continue',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Center(
                     child: TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        "I'll do this later",
-                        style: TextStyle(
-                          color: isDark ? Colors.white70 : const Color(0xFF2563EB),
-                        ),
-                      ),
+                      onPressed: _submitting
+                          ? null
+                          : () => Navigator.pop(context),
+                      child: const Text("I'll do this later"),
                     ),
                   ),
                 ],
@@ -110,16 +297,100 @@ class VerifyEnrollmentScreen extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  final bool isDark;
+class _CourseCodesPanel extends StatelessWidget {
+  const _CourseCodesPanel({
+    required this.codesFromPdf,
+    required this.targetCourse,
+  });
 
-  const _Header({required this.isDark});
+  final List<String> codesFromPdf;
+  final String targetCourse;
 
   @override
   Widget build(BuildContext context) {
-    final primaryText = isDark ? Colors.white : const Color(0xFF111827);
-    final secondaryText = isDark ? Colors.white70 : const Color(0xFF6B7280);
+    final targetNorm =
+        TranscriptCourseExtractor.normalizeCourseCode(targetCourse);
+    final hasTarget = codesFromPdf.any(
+      (c) =>
+          TranscriptCourseExtractor.normalizeCourseCode(c) == targetNorm,
+    );
 
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hasTarget ? const Color(0xFF22C55E) : const Color(0xFFE5E7EB),
+          width: hasTarget ? 2 : 1,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Transkriptten çıkan ders kodları',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hasTarget
+                ? '$targetCourse listede — doğrulamaya devam edebilirsiniz.'
+                : '$targetCourse henüz yok — metin içeren PDF deneyin.',
+            style: TextStyle(
+              fontSize: 13,
+              color: hasTarget
+                  ? const Color(0xFF15803D)
+                  : const Color(0xFFB45309),
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (codesFromPdf.isEmpty)
+            Text(
+              'Henüz kod yok. Metin seçilebilir bir transkript PDF’i yükleyin.',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: codesFromPdf.map((c) {
+                final isTarget =
+                    TranscriptCourseExtractor.normalizeCourseCode(c) ==
+                        targetNorm;
+                return Chip(
+                  label: Text(c),
+                  backgroundColor: isTarget
+                      ? const Color(0xFFDCFCE7)
+                      : const Color(0xFFF3F4F6),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.courseCode,
+    required this.courseName,
+  });
+
+  final String courseCode;
+  final String courseName;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -127,16 +398,13 @@ class _Header extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE5E7EB),
+            color: const Color(0xFFE5E7EB),
             borderRadius: BorderRadius.circular(22),
           ),
           child: IconButton(
             onPressed: () => Navigator.of(context).maybePop(),
-            icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 20,
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-            ),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            color: const Color(0xFF6B7280),
           ),
         ),
         const SizedBox(width: 14),
@@ -144,20 +412,16 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Verify Enrollment',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: primaryText,
-                ),
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 2),
               Text(
-                'Course: CS301 - Algorithms',
-                style: TextStyle(
+                'Course: $courseCode — $courseName',
+                style: const TextStyle(
                   fontSize: 14,
-                  color: secondaryText,
+                  color: Color(0xFF6B7280),
                 ),
               ),
             ],
@@ -169,26 +433,25 @@ class _Header extends StatelessWidget {
 }
 
 class _ProgressStepsCard extends StatelessWidget {
-  final bool isDark;
-  final Color cardColor;
-  final Color borderColor;
-
-  const _ProgressStepsCard({
-    required this.isDark,
-    required this.cardColor,
-    required this.borderColor,
-  });
+  const _ProgressStepsCard();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      child: Column(
+      child: const Column(
         children: [
           StepItem(
             stepNumber: 1,
@@ -196,22 +459,19 @@ class _ProgressStepsCard extends StatelessWidget {
             subtitle: 'Official PDF from Banner',
             isActive: true,
             showConnector: true,
-            isDark: isDark,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           StepItem(
             stepNumber: 2,
             title: 'AI Verification',
             subtitle: 'Checking course history',
             showConnector: true,
-            isDark: isDark,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           StepItem(
             stepNumber: 3,
             title: 'Write Review',
             subtitle: 'Share your experience',
-            isDark: isDark,
           ),
         ],
       ),
@@ -225,7 +485,6 @@ class StepItem extends StatelessWidget {
     required this.stepNumber,
     required this.title,
     required this.subtitle,
-    required this.isDark,
     this.isActive = false,
     this.showConnector = false,
   });
@@ -233,16 +492,15 @@ class StepItem extends StatelessWidget {
   final int stepNumber;
   final String title;
   final String subtitle;
-  final bool isDark;
   final bool isActive;
   final bool showConnector;
 
   @override
   Widget build(BuildContext context) {
-    final circleColor = isActive ? const Color(0xFF2196F3) : const Color(0xFFBFDBFE);
-    final textColor = isActive
-        ? (isDark ? Colors.white : const Color(0xFF111827))
-        : (isDark ? Colors.white70 : const Color(0xFF6B7280));
+    final circleColor =
+        isActive ? const Color(0xFF2196F3) : const Color(0xFFBFDBFE);
+    final textColor =
+        isActive ? const Color(0xFF111827) : const Color(0xFF6B7280);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +531,7 @@ class StepItem extends StatelessWidget {
                 Container(
                   width: 1.5,
                   height: 30,
-                  color: isDark ? const Color(0xFF333333) : const Color(0xFFD1D5DB),
+                  color: const Color(0xFFD1D5DB),
                 ),
               ],
             ],
@@ -295,9 +553,9 @@ class StepItem extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13,
-                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                  color: Color(0xFF6B7280),
                 ),
               ),
             ],
@@ -308,66 +566,81 @@ class StepItem extends StatelessWidget {
   }
 }
 
-class UploadBox extends StatelessWidget {
-  final bool isDark;
-  final Color cardColor;
-  final Color borderColor;
-
-  const UploadBox({
-    super.key,
-    required this.isDark,
-    required this.cardColor,
-    required this.borderColor,
+class _UploadArea extends StatelessWidget {
+  const _UploadArea({
+    required this.fileName,
+    required this.onTap,
   });
+
+  final String? fileName;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
-      decoration: BoxDecoration(
-        color: cardColor,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.upload_file_rounded, size: 56, color: Color(0xFF2196F3)),
-          const SizedBox(height: 6),
-          Text(
-            'Tap to select PDF',
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF111827),
+        child: Ink(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: fileName != null
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFFD1D5DB),
+              width: fileName != null ? 1.8 : 1,
             ),
-            textAlign: TextAlign.center,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x10000000),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            'or drag and drop here',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-            ),
-            textAlign: TextAlign.center,
+          child: Column(
+            children: [
+              Icon(
+                Icons.picture_as_pdf_rounded,
+                size: 56,
+                color: fileName != null
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFF2196F3),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                fileName ?? 'Tap to select PDF',
+                style: TextStyle(
+                  fontSize: fileName != null ? 16 : 22,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (fileName == null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Official transcript export only',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
 class _RequirementsCard extends StatelessWidget {
-  final bool isDark;
-  final Color cardColor;
-  final Color borderColor;
-
-  const _RequirementsCard({
-    required this.isDark,
-    required this.cardColor,
-    required this.borderColor,
-  });
+  const _RequirementsCard();
 
   @override
   Widget build(BuildContext context) {
@@ -375,38 +648,38 @@ class _RequirementsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: const Color(0xFFD1D5DB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Requirements:',
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF111827),
-            ),
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           RequirementItem(
             icon: Icons.picture_as_pdf_rounded,
             text: 'Format: PDF only',
-            isDark: isDark,
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           RequirementItem(
             icon: Icons.badge_rounded,
             text: 'Must show your name and Student ID',
-            isDark: isDark,
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           RequirementItem(
             icon: Icons.lock_outline_rounded,
             text: 'Data is encrypted and used for verification only',
-            isDark: isDark,
           ),
         ],
       ),
@@ -419,31 +692,22 @@ class RequirementItem extends StatelessWidget {
     super.key,
     required this.icon,
     required this.text,
-    required this.isDark,
   });
 
   final IconData icon;
   final String text;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: isDark ? Colors.white70 : const Color(0xFF374151),
-        ),
+        Icon(icon, size: 16, color: const Color(0xFF374151)),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 13.5,
-              color: isDark ? Colors.white70 : const Color(0xFF111827),
-            ),
+            style: const TextStyle(fontSize: 13.5, color: Color(0xFF111827)),
           ),
         ),
       ],
