@@ -34,90 +34,134 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
   Future<void> _toggleSort() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
+
     final newSortByRating = !_sortByRating;
     setState(() => _sortByRating = newSortByRating);
-    if (!mounted) return;
+
     await prefs.setBool(_kSortKey, newSortByRating);
   }
 
   void _showFeedbackDialog(FeedbackItem? existing) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final textController = TextEditingController(text: existing?.text ?? '');
     double rating = existing?.rating ?? 3;
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(builder: (ctx, setDlg) {
-        return AlertDialog(
-          title: Text(existing == null ? 'Add Feedback' : 'Edit Feedback'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: textController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'Write your feedback...',
-                  border: OutlineInputBorder(),
-                ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlg) {
+          return AlertDialog(
+            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            title: Text(
+              existing == null ? 'Add Feedback' : 'Edit Feedback',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
               ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) {
-                  return GestureDetector(
-                    onTap: () => setDlg(() => rating = (i + 1).toDouble()),
-                    child: Icon(
-                      i < rating ? Icons.star : Icons.star_border,
-                      color: AppColors.starYellow,
-                      size: 28,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: textController,
+                  maxLines: 3,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Write your feedback...',
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white54 : Colors.black54,
                     ),
-                  );
-                }),
+                    filled: true,
+                    fillColor:
+                        isDark ? const Color(0xFF121212) : Colors.white,
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color:
+                            isDark ? const Color(0xFF333333) : Colors.black26,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color:
+                            isDark ? const Color(0xFF333333) : Colors.black26,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white70 : Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    return GestureDetector(
+                      onTap: () => setDlg(() => rating = (i + 1).toDouble()),
+                      child: Icon(
+                        i < rating ? Icons.star : Icons.star_border,
+                        color: AppColors.starYellow,
+                        size: 28,
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final text = textController.text.trim();
+                  if (text.isEmpty) return;
+
+                  final provider = context.read<FeedbackProvider>();
+
+                  if (existing == null) {
+                    await provider.add(text, rating);
+                  } else {
+                    await provider.update(
+                      FeedbackItem(
+                        id: existing.id,
+                        text: text,
+                        rating: rating,
+                        createdBy: existing.createdBy,
+                        createdAt: existing.createdAt,
+                      ),
+                    );
+                  }
+
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                child: Text(existing == null ? 'Add' : 'Save'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final text = textController.text.trim();
-                if (text.isEmpty) return;
-                final provider = context.read<FeedbackProvider>();
-                if (existing == null) {
-                  await provider.add(text, rating);
-                } else {
-                  await provider.update(FeedbackItem(
-                    id: existing.id,
-                    text: text,
-                    rating: rating,
-                    createdBy: existing.createdBy,
-                    createdAt: existing.createdAt,
-                  ));
-                }
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
-              child: Text(existing == null ? 'Add' : 'Save'),
-            ),
-          ],
-        );
-      }),
+          );
+        },
+      ),
     ).then((_) => textController.dispose());
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<FeedbackProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final feedbacks = List<FeedbackItem>.from(provider.feedbacks);
-    if (_sortByRating) feedbacks.sort((a, b) => b.rating.compareTo(a.rating));
+    if (_sortByRating) {
+      feedbacks.sort((a, b) => b.rating.compareTo(a.rating));
+    }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? const Color(0xFF121212) : AppColors.background,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showFeedbackDialog(null),
-        backgroundColor: Colors.black,
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.black,
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: SafeArea(
@@ -128,22 +172,38 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
               child: Row(
                 children: [
-                  Image.asset('assets/images/app_icon.png', width: 32, height: 32),
+                  Image.asset(
+                    'assets/images/app_icon.png',
+                    width: 32,
+                    height: 32,
+                  ),
                   const SizedBox(width: 10),
-                  const Text('Last Feedbacks', style: AppTextStyles.screenTitle),
+                  Text(
+                    'Last Feedbacks',
+                    style: AppTextStyles.screenTitle.copyWith(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
                   const Spacer(),
                   GestureDetector(
                     onTap: _toggleSort,
                     child: Row(
                       children: [
-                        Icon(Icons.sort, size: 18,
-                            color: _sortByRating ? Colors.black : AppColors.iconMuted),
+                        Icon(
+                          Icons.sort,
+                          size: 18,
+                          color: _sortByRating
+                              ? (isDark ? Colors.white : Colors.black)
+                              : (isDark ? Colors.grey : AppColors.iconMuted),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           _sortByRating ? 'By rating' : 'By date',
                           style: TextStyle(
                             fontSize: 12,
-                            color: _sortByRating ? Colors.black : AppColors.iconMuted,
+                            color: _sortByRating
+                                ? (isDark ? Colors.white : Colors.black)
+                                : (isDark ? Colors.grey : AppColors.iconMuted),
                           ),
                         ),
                       ],
@@ -155,10 +215,19 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
               child: Row(
-                children: const [
-                  Text('Edit your feedback', style: AppTextStyles.sectionSubtitle),
-                  SizedBox(width: 6),
-                  Icon(Icons.edit_outlined, size: 18, color: AppColors.iconMuted),
+                children: [
+                  Text(
+                    'Edit your feedback',
+                    style: AppTextStyles.sectionSubtitle.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.iconMuted,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.edit_outlined,
+                    size: 18,
+                    color: isDark ? Colors.grey : AppColors.iconMuted,
+                  ),
                 ],
               ),
             ),
@@ -178,32 +247,62 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
               child: provider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : feedbacks.isEmpty
-                      ? const Center(child: Text('No feedbacks yet. Tap + to add one.'))
+                      ? Center(
+                          child: Text(
+                            'No feedbacks yet. Tap + to add one.',
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black,
+                            ),
+                          ),
+                        )
                       : ListView.separated(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemCount: feedbacks.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final item = feedbacks[index];
+
                             return GestureDetector(
                               onTap: () => _showFeedbackDialog(item),
                               child: Card(
+                                color: isDark
+                                    ? const Color(0xFF1E1E1E)
+                                    : Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  side: const BorderSide(color: AppColors.border),
+                                  side: BorderSide(
+                                    color: isDark
+                                        ? const Color(0xFF333333)
+                                        : AppColors.border,
+                                  ),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.person,
-                                          size: 36, color: AppColors.iconMuted),
+                                      Icon(
+                                        Icons.person,
+                                        size: 36,
+                                        color: isDark
+                                            ? Colors.white70
+                                            : AppColors.iconMuted,
+                                      ),
                                       const SizedBox(width: 10),
                                       Expanded(
-                                        child: Text(item.text,
-                                            style: AppTextStyles.cardBody),
+                                        child: Text(
+                                          item.text,
+                                          style:
+                                              AppTextStyles.cardBody.copyWith(
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
+                                        ),
                                       ),
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -222,8 +321,13 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
                                         onTap: () => context
                                             .read<FeedbackProvider>()
                                             .delete(item.id),
-                                        child: const Icon(Icons.close,
-                                            size: 18, color: AppColors.iconMuted),
+                                        child: Icon(
+                                          Icons.close,
+                                          size: 18,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : AppColors.iconMuted,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -237,23 +341,39 @@ class _LastFeedbacksScreenState extends State<LastFeedbacksScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.border)),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : AppColors.background,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? const Color(0xFF333333) : AppColors.border,
+            ),
+          ),
         ),
         child: BottomNavigationBar(
-          backgroundColor: AppColors.background,
+          backgroundColor:
+              isDark ? const Color(0xFF1E1E1E) : AppColors.background,
           currentIndex: 0,
-          selectedItemColor: Colors.black,
-          unselectedItemColor: AppColors.iconMuted,
+          selectedItemColor: isDark ? Colors.white : Colors.black,
+          unselectedItemColor: isDark ? Colors.grey : AppColors.iconMuted,
           showSelectedLabels: false,
           showUnselectedLabels: false,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home, size: 30), label: ''),
-            BottomNavigationBarItem(icon: Icon(Icons.person, size: 30), label: ''),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home, size: 30),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person, size: 30),
+              label: '',
+            ),
           ],
           onTap: (index) {
             if (index == 0) {
-              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.main, (_) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.main,
+                (_) => false,
+              );
             } else if (index == 1) {
               Navigator.pushNamed(context, AppRoutes.profile);
             }

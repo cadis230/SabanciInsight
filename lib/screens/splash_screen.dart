@@ -34,12 +34,12 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // 2.5 saniye sonra Login ekranına geç
+    // 2.5 saniye sonra AuthWrapper'a (/) geç
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
         Navigator.pushReplacementNamed(
           context,
-          AppRoutes.login,
+          '/',
         );
       }
     });

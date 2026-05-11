@@ -6,9 +6,10 @@ class CourseReviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -18,11 +19,21 @@ class CourseReviewScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 10),
                 TextField(
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                   decoration: InputDecoration(
                     hintText: "Search",
-                    prefixIcon: const Icon(Icons.search),
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[200],
+                    fillColor:
+                        isDark ? const Color(0xFF1E1E1E) : Colors.grey[200],
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -31,42 +42,50 @@ class CourseReviewScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   "Course",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 const SizedBox(height: 10),
-                buildCourseItem(context),
-                buildCourseItem(context),
-                buildCourseItem(context),
+                buildCourseItem(context, isDark),
+                buildCourseItem(context, isDark),
+                buildCourseItem(context, isDark),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   "Instructors",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 const SizedBox(height: 10),
-                buildInstructorItem(),
-                buildInstructorItem(),
+                buildInstructorItem(isDark),
+                buildInstructorItem(isDark),
                 const SizedBox(height: 20),
                 Center(
                   child: Column(
                     children: [
-                      const Text(
+                      Text(
                         "Featured Course",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
                       ),
                       const SizedBox(height: 10),
-                      Image.network(
-                        "https://picsum.photos/200",
-                        width: 200,
-                        height: 120,
-                        fit: BoxFit.cover,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          "https://picsum.photos/200",
+                          width: 200,
+                          height: 120,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ],
                   ),
@@ -77,12 +96,11 @@ class CourseReviewScreen extends StatelessWidget {
           ),
         ),
       ),
-
-      // 🔻 BOTTOM NAV (wireframe gibi)
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         currentIndex: 0,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: isDark ? Colors.white : Colors.black,
+        unselectedItemColor: isDark ? Colors.grey : Colors.grey,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: const [
@@ -112,8 +130,7 @@ class CourseReviewScreen extends StatelessWidget {
     );
   }
 
-  // 🔧 COURSE ITEM (GRİ BLOK + STAR)
-  Widget buildCourseItem(BuildContext context) {
+  Widget buildCourseItem(BuildContext context, bool isDark) {
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -125,31 +142,33 @@ class CourseReviewScreen extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.grey[300],
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[300],
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isDark ? const Color(0xFF333333) : Colors.transparent,
+          ),
         ),
         child: Row(
           children: [
-
-            // GRI BOX (placeholder)
             Image.asset(
               "assets/images/course.png",
               width: 40,
               height: 40,
+              color: isDark ? Colors.white : null,
             ),
-
-
-
             const SizedBox(width: 10),
-
-            // STARS
             Row(
-              children: const [
-                Icon(Icons.star, size: 16),
-                Icon(Icons.star, size: 16),
-                Icon(Icons.star, size: 16),
-                Icon(Icons.star, size: 16),
-                Icon(Icons.star_border, size: 16),
+              children: [
+                Icon(Icons.star,
+                    size: 16, color: isDark ? Colors.amber : Colors.black),
+                Icon(Icons.star,
+                    size: 16, color: isDark ? Colors.amber : Colors.black),
+                Icon(Icons.star,
+                    size: 16, color: isDark ? Colors.amber : Colors.black),
+                Icon(Icons.star,
+                    size: 16, color: isDark ? Colors.amber : Colors.black),
+                Icon(Icons.star_border,
+                    size: 16, color: isDark ? Colors.amber : Colors.black),
               ],
             ),
           ],
@@ -158,20 +177,30 @@ class CourseReviewScreen extends StatelessWidget {
     );
   }
 
-  // 🔧 INSTRUCTOR ITEM
-  Widget buildInstructorItem() {
+  Widget buildInstructorItem(bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[300],
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[300],
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark ? const Color(0xFF333333) : Colors.transparent,
+        ),
       ),
       child: Row(
-        children: const [
-          Icon(Icons.person),
-          SizedBox(width: 10),
-          Text("Username"),
+        children: [
+          Icon(
+            Icons.person,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            "Username",
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
         ],
       ),
     );
