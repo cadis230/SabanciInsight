@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
-import 'routes.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-
-
-
-import 'package:provider/provider.dart';
+import 'package:project_step_3/utils/auth_validators.dart';
 import '../providers/auth_provider.dart' as auth;
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -164,15 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: _inputDecoration(hintText: '@sabanciuniv.edu'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email giriniz';
-                        }
-                        if (!value.endsWith('@sabanciuniv.edu')) {
-                          return 'Sadece @sabanciuniv.edu adresiyle kayıt olabilirsiniz';
-                        }
-                        return null;
-                      },
+                      validator: validateSabanciEmail,
                     ),
                     const SizedBox(height: 4),
                     RichText(
@@ -223,12 +207,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                           },
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.length < 6) {
-                          return 'En az 6 karakter giriniz';
-                        }
-                        return null;
-                      },
+                      validator: validatePassword,
                     ),
 
                     const SizedBox(height: 36),

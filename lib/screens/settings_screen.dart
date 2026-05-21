@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/enrollment_verification_service.dart';
-import 'utils/app_colors.dart';
-import 'utils/app_text_styles.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_text_styles.dart';
 import 'routes.dart';
 
 class SettingsScreen extends StatelessWidget {

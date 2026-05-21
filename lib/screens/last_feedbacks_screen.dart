@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/feedback_provider.dart';
 import 'models/feedback_item.dart';
 import 'routes.dart';
-import 'utils/app_colors.dart';
-import 'utils/app_text_styles.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_text_styles.dart';
 
 const _kSortKey = 'feedbacks_sort_by_rating';
 

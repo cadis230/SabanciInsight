@@ -1,19 +1,8 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:project_step_3/utils/auth_validators.dart';
 import '../providers/auth_provider.dart' as auth_provider;
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
-    );
-  }
-}
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -25,9 +14,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController emailController = TextEditingController();
 
-  bool get isValidEmail =>
-      emailController.text.trim().endsWith('@sabanciuniv.edu') &&
-          emailController.text.trim().isNotEmpty;
+  bool get isValidEmail => isValidSabanciEmail(emailController.text);
 
   @override
   Widget build(BuildContext context) {

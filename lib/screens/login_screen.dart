@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'routes.dart';
 import '../providers/auth_provider.dart';
-
+import 'package:project_step_3/utils/auth_validators.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -143,15 +143,7 @@ class _LoginScreenState extends State<LoginScreen>
                       decoration: _inputDecoration(
                         hintText: 'username@sabanciuniv.edu',
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email giriniz';
-                        }
-                        if (!value.endsWith('@sabanciuniv.edu')) {
-                          return 'Sabancı Üniversitesi email adresi giriniz';
-                        }
-                        return null;
-                      },
+                      validator: validateSabanciEmail,
                     ),
 
                     const SizedBox(height: 20),
@@ -185,12 +177,7 @@ class _LoginScreenState extends State<LoginScreen>
                           },
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.length < 6) {
-                          return 'En az 6 karakter giriniz';
-                        }
-                        return null;
-                      },
+                      validator: validatePassword,
                     ),
 
                     // Forgot Password
