@@ -93,7 +93,6 @@ class _RegisterScreenState extends State<RegisterScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // Geri butonu için AppBar (opsiyonel - kaldırabilirsin)
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
