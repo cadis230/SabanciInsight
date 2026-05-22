@@ -2,7 +2,7 @@
 
 **SabancıInsight** is a Flutter mobile application for Sabancı University students to browse course reviews, share feedback, verify enrollment via transcript upload, and view AI-generated summaries of peer reviews. The app uses Firebase for authentication and cloud data storage, and **Provider** for state management.
 
----
+--- 
 
 ## Motivation and Purpose
 
