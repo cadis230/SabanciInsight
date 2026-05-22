@@ -229,7 +229,7 @@ flutter test
 - **Course catalog:** Courses shown in the app come from the Firestore `courses` collection and from course codes extracted from transcripts; this is not an official Sabancı University course API.
 - **Transcript PDF parsing:** Extraction works best on text-based PDF transcripts; scanned/image-only PDFs may fail or return incomplete course codes.
 - **Enrollment verification:** Verification is based on course codes found in the uploaded transcript, not on direct integration with university registration systems.
-- **AI summaries:** Gemini responses depend on network availability and API quotas; summaries are generated in Turkish and may vary in quality with few reviews.
+- **AI summaries:** Gemini responses depend on network availability and API quotas. 
 
 ---
 
