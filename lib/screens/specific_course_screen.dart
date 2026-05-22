@@ -7,6 +7,7 @@ import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import 'routes.dart';
 import '../services/ai_service.dart';
+import '../services/course_ai_cache_service.dart';
 import '../services/enrollment_verification_service.dart';
 import '../services/transcript_course_extractor.dart';
 
@@ -26,31 +27,69 @@ class SpecificCourseScreen extends StatefulWidget {
 
 class _SpecificCourseScreenState extends State<SpecificCourseScreen> {
   final AiService _aiService = AiService();
+  final CourseAiCacheService _aiCache = CourseAiCacheService();
   String? _aiInsight;
   bool _aiLoading = false;
-  String _lastReviewsKey = '';
+  String _lastFingerprint = '';
+  bool _insightInFlight = false;
+
+  static const _errorInsight = 'Could not load AI insights.';
 
   Future<void> _refreshInsight(List<FeedbackItem> reviews) async {
-    final key = reviews.map((r) => r.text).join('||');
-    if (key == _lastReviewsKey) return;
-    _lastReviewsKey = key;
+    if (reviews.isEmpty) {
+      if (_lastFingerprint.isNotEmpty || _aiInsight != null || _aiLoading) {
+        if (mounted) {
+          setState(() {
+            _aiInsight = null;
+            _aiLoading = false;
+            _lastFingerprint = '';
+            _insightInFlight = false;
+          });
+        }
+      }
+      return;
+    }
 
-    setState(() => _aiLoading = true);
+    final fingerprint = CourseAiCacheService.buildFingerprint(reviews);
+    if (fingerprint == _lastFingerprint || _insightInFlight) return;
+
+    _insightInFlight = true;
+    if (mounted) setState(() => _aiLoading = true);
 
     try {
-      final avg = reviews.isEmpty
-          ? 0.0
-          : reviews.fold(0.0, (s, r) => s + r.rating) / reviews.length;
+      final cached = await _aiCache.getCachedSummary(widget.courseId, fingerprint);
+      if (cached != null) {
+        _lastFingerprint = fingerprint;
+        if (mounted) setState(() => _aiInsight = cached);
+        return;
+      }
+
+      final avg =
+          reviews.fold(0.0, (s, r) => s + r.rating) / reviews.length;
 
       final insight = await _aiService.generateCourseInsights(
         courseTitle: widget.courseTitle,
         reviews: reviews.map((r) => r.text).toList(),
         avgRating: avg,
       );
+
+      if (insight != _errorInsight &&
+          !insight.startsWith('Özet oluşturulurken') &&
+          !insight.startsWith('AI günlük kotası')) {
+        await _aiCache.saveSummary(
+          courseId: widget.courseId,
+          fingerprint: fingerprint,
+          summary: insight,
+          reviewCount: reviews.length,
+        );
+      }
+
+      _lastFingerprint = fingerprint;
       if (mounted) setState(() => _aiInsight = insight);
     } catch (_) {
-      if (mounted) setState(() => _aiInsight = 'Could not load AI insights.');
+      if (mounted) setState(() => _aiInsight = _errorInsight);
     } finally {
+      _insightInFlight = false;
       if (mounted) setState(() => _aiLoading = false);
     }
   }
@@ -150,7 +189,7 @@ class _SpecificCourseScreenState extends State<SpecificCourseScreen> {
               ? 0.0
               : reviews.fold(0.0, (sum, r) => sum + r.rating) / reviews.length;
 
-          if (snapshot.hasData && reviews.isNotEmpty) {
+          if (snapshot.hasData) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _refreshInsight(reviews);
             });
