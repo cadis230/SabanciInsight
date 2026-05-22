@@ -153,14 +153,22 @@ cd SabanciInsight
 ```bash
 flutter pub get
 ```
+**3. Set up Gemini API key**
 
-**3. Firebase configuration**
+The application uses Google Gemini for AI-generated course summaries. Before running the project for the first time, create the local Gemini API key file with the setup script:
+
+```bash
+.\setup_gemini_key.ps1
+```
+This step only needs to be done once, unless the local key file is deleted or the project is cloned again.
+
+**4. Firebase configuration**
 
 - Confirm `lib/firebase_options.dart` and `android/app/google-services.json` are present.
 - Ensure Email/Password auth and Firestore are enabled in Firebase Console.
 - Publish `firestore.rules` as described above.
 
-**4. Run the application**
+**5. Run the application**
 
 ```bash
 flutter run
